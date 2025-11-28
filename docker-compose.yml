@@ -3,10 +3,10 @@ services:
   web:
     image: myapp:latest
     build: .
-    container_name: myapp_container
+    container_name: macoui_admin_container
     restart: always
     ports:
-      - "3000:3000"
+      - "3020:3020"
     environment:
       NODE_ENV: production
     volumes:
