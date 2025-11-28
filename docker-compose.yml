@@ -6,8 +6,8 @@ services:
     container_name: macoui_admin_container
     restart: unless-stopped
     ports:
-      - "3020:3020"
+      - "3020:3000"   # host:container
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
     volumes:
-      - /var/www/myapp/.next:/app/.next # اختیاری: برای debug / cache
+      - /var/www/myapp/.next:/app/.next # اختیاری
