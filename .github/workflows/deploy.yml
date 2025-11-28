@@ -25,11 +25,10 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             set -e
-            cd /var/www/myapp || exit 0
+            cd /var/www/macoui-admin || exit 0
             git fetch --all
             git reset --hard origin/main
             docker build -t myapp:latest .
-            # اگر از docker-compose استفاده می‌کنی:
             docker compose pull || true
             docker compose down
             docker compose up -d --build
