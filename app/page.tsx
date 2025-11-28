@@ -36,7 +36,7 @@ export default function DashboardPage() {
     <DashboardLayout title="Dashboard" wave={true}>
       <div className="mx-4">
         <div className="space-y-6">
-          {/* Search Bar  test*/}
+          {/* Search Bar te*/}
           <MobileSearchBar />
 
           {/* Stats Cards */}
