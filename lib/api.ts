@@ -1,0 +1,133 @@
+// API Service for making authenticated requests
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api"
+const TOKEN_STORAGE_KEY = "auth-token"
+
+interface ApiError {
+  message: string
+  status: number
+}
+
+interface ApiResponse<T> {
+  data: T | null
+  error: ApiError | null
+}
+
+// Get token from localStorage
+export function getAuthToken(): string | null {
+  if (typeof window === "undefined") return null
+  return localStorage.getItem(TOKEN_STORAGE_KEY)
+}
+
+// Set token to localStorage
+export function setAuthToken(token: string): void {
+  if (typeof window === "undefined") return
+  localStorage.setItem(TOKEN_STORAGE_KEY, token)
+}
+
+// Remove token from localStorage
+export function removeAuthToken(): void {
+  if (typeof window === "undefined") return
+  localStorage.removeItem(TOKEN_STORAGE_KEY)
+}
+
+// Check if user is authenticated
+export function isAuthenticated(): boolean {
+  return !!getAuthToken()
+}
+
+// Generic fetch wrapper with authentication
+async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
+  const token = getAuthToken()
+
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+    ...(token && { Authorization: `Bearer ${token}` }),
+    ...options.headers,
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers,
+    })
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        removeAuthToken()
+      }
+
+      const errorData = await response.json().catch(() => ({}))
+      return {
+        data: null,
+        error: {
+          message: errorData.message || "An error occurred",
+          status: response.status,
+        },
+      }
+    }
+
+    const data = await response.json()
+    return { data, error: null }
+  } catch (error) {
+    return {
+      data: null,
+      error: {
+        message: error instanceof Error ? error.message : "Network error",
+        status: 0,
+      },
+    }
+  }
+}
+
+// API GET method
+export function apiGet<T>(endpoint: string): Promise<ApiResponse<T>> {
+  return apiFetch<T>(endpoint, { method: "GET" })
+}
+
+// API POST method
+export function apiPost<T>(endpoint: string, body: unknown): Promise<ApiResponse<T>> {
+  return apiFetch<T>(endpoint, {
+    method: "POST",
+    body: JSON.stringify(body),
+  })
+}
+
+// API PUT method
+export function apiPut<T>(endpoint: string, body: unknown): Promise<ApiResponse<T>> {
+  return apiFetch<T>(endpoint, {
+    method: "PUT",
+    body: JSON.stringify(body),
+  })
+}
+
+// API PATCH method
+export function apiPatch<T>(endpoint: string, body: unknown): Promise<ApiResponse<T>> {
+  return apiFetch<T>(endpoint, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  })
+}
+
+// API DELETE method
+export function apiDelete<T>(endpoint: string): Promise<ApiResponse<T>> {
+  return apiFetch<T>(endpoint, { method: "DELETE" })
+}
+
+// API object for convenience
+export const api = {
+  get: apiGet,
+  post: apiPost,
+  put: apiPut,
+  patch: apiPatch,
+  delete: apiDelete,
+}
+
+// SWR fetcher with authentication
+export async function swrFetcher<T>(url: string): Promise<T> {
+  const response = await apiGet<T>(url)
+  if (response.error) {
+    throw new Error(response.error.message)
+  }
+  return response.data as T
+}
