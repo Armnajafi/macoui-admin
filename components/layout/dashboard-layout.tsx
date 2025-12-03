@@ -110,60 +110,102 @@ export default function DashboardLayout({ children, title = "Dashboard", wave = 
         </div>
       </header>
 
-      {wave && (
+      {wave && theme !== "dark" && (
         <div className="hidden lg:block fixed inset-0 pointer-events-none z-0 overflow-hidden">
+<svg
+  width="110%"
+  height="240"
+  viewBox="0 0 1440 140"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+  preserveAspectRatio="xMidYMin slice"
+>
+  <g filter="url(#filter_blur_top)">
+    <path
+      d="M127.94 144.4215C31.9471 119.4445 -203.239 93.501 -165.459 0.279L1493.79 -1.387L1427.79 101.7845C1394.77 78.3845 1273.34 49.181 1051.79 119.566C774.851 207.5475 644.216 57.642 271.265 41.24995C-101.685 24.85775 201.265 163.501 127.94 144.4215Z"
+      fill="url(#paint0_linear_custom)"
+    />
+  </g>
 
-                  <svg             width="120%"
-                  height="315"
-                  viewBox="0 0 1440 315"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  preserveAspectRatio="xMidYMin slice">
-      <g filter="url(#filter0_f_1299_3812)">
-      <path d="M127.94 288.843C31.9471 238.889 -203.239 187.002 -165.459 0.558002L1493.79 -2.77423L1427.79 203.569C1394.77 156.769 1273.34 98.3622 1051.79 239.132C774.851 415.095 644.216 115.284 271.265 82.4999C-101.685 49.7155 201.265 327.002 127.94 288.843Z" fill="url(#paint0_linear_1299_3812)"/>
-      </g>
-      <defs>
-      <filter id="filter0_f_1299_3812" x="-189.531" y="-22.7734" width="1703.32" height="336.885" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
-      <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
-      <feGaussianBlur stdDeviation="10" result="effect1_foregroundBlur_1299_3812"/>
-      </filter>
-      <linearGradient id="paint0_linear_1299_3812" x1="924.249" y1="517.104" x2="925.472" y2="-296.506" gradientUnits="userSpaceOnUse">
-      <stop offset="0.45" stop-color="#AACEFF" stop-opacity="0.9"/>
-      <stop offset="1" stop-color="white" stop-opacity="0"/>
-      </linearGradient>
-      </defs>
-      </svg></div>
+  <defs>
+    <filter
+      id="filter_blur_top"
+      x="-250"
+      y="-120"
+      width="2000"
+      height="400"
+      filterUnits="userSpaceOnUse"
+      color-interpolation-filters="sRGB"
+    >
+      <feFlood flood-opacity="0" result="BackgroundImageFix" />
+      <feBlend in="SourceGraphic" in2="BackgroundImageFix" mode="normal" />
+      <feGaussianBlur stdDeviation="12" />
+    </filter>
+
+    <linearGradient
+      id="paint0_linear_custom"
+      x1="765.735"
+      y1="428.417"
+      x2="766.748"
+      y2="-245.651"
+      gradientUnits="userSpaceOnUse"
+    >
+      <stop offset="0.45" stop-color="#AACEFF" stop-opacity="0.9" />
+      <stop offset="1" stop-color="white" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+</svg>
+
+
+        </div>
       )}
       {/* Wave decorations */}
       {wave && theme === "dark" && (
         <div className="hidden lg:block fixed inset-0 pointer-events-none z-0 overflow-hidden">
-          <svg
-            width="110%"
-            height="240"
-            viewBox="0 0 1440 140"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            preserveAspectRatio="xMidYMin slice"
-          >
-            <path
-              d="M127.94 144.4215C31.9471 119.4445 -203.239 93.501 -165.459 0.279L1493.79 -1.387L1427.79 101.7845C1394.77 78.3845 1273.34 49.181 1051.79 119.566C774.851 207.5475 644.216 57.642 271.265 41.24995C-101.685 24.85775 201.265 163.501 127.94 144.4215Z"
-              fill="url(#paint0_linear_1255_847)"
-            />
-            <defs>
-              <linearGradient
-                id="paint0_linear_1255_847"
-                x1="924.249"
-                y1="258.552"
-                x2="925.472"
-                y2="-148.253"
-                gradientUnits="userSpaceOnUse"
-              >
-                <stop stopColor="#016BFF" stopOpacity="0.9" />
-                <stop offset="1" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-          </svg>
+<svg
+  width="110%"
+  height="240"
+  viewBox="0 0 1440 140"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+  preserveAspectRatio="xMidYMin slice"
+>
+  <g filter="url(#filter_blur_bottom)">
+    <path
+      d="M127.94 144.4215C31.9471 119.4445 -203.239 93.501 -165.459 0.279L1493.79 -1.387L1427.79 101.7845C1394.77 78.3845 1273.34 49.181 1051.79 119.566C774.851 207.5475 644.216 57.642 271.265 41.24995C-101.685 24.85775 201.265 163.501 127.94 144.4215Z"
+      fill="url(#paint0_linear_1255_847)"
+    />
+  </g>
+
+  <defs>
+    <filter
+      id="filter_blur_bottom"
+      x="-250"
+      y="-120"
+      width="2000"
+      height="400"
+      filterUnits="userSpaceOnUse"
+      color-interpolation-filters="sRGB"
+    >
+      <feFlood flood-opacity="0" result="BackgroundImageFix" />
+      <feBlend in="SourceGraphic" in2="BackgroundImageFix" mode="normal" />
+      <feGaussianBlur stdDeviation="12" />
+    </filter>
+
+    <linearGradient
+      id="paint0_linear_1255_847"
+      x1="924.249"
+      y1="258.552"
+      x2="925.472"
+      y2="-148.253"
+      gradientUnits="userSpaceOnUse"
+    >
+      <stop stop-color="#016BFF" stop-opacity="0.9" />
+      <stop offset="1" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+</svg>
+
         </div>
       )}
 
@@ -256,65 +298,107 @@ export default function DashboardLayout({ children, title = "Dashboard", wave = 
         {/* Main content area */}
         <main className="flex-1 py-8 px-1 lg:px-12 lg:pl-40 overflow-auto transition-all z-10">{children}</main>
       </div>
-      {wave && (
-        <div className="hidden lg:block fixed inset-0 pointer-events-none z-0 overflow-hidden">
-          <svg             width="100%"
-            height="315"
-            viewBox="0 0 1440 315"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            preserveAspectRatio="xMidYMax slice"
-            className="bottom-0 left-0 w-full"
-            style={{ transform: "translateY(50%)" }}>
-<g filter="url(#filter0_f_1299_3813)">
-<path d="M257.401 26.135C159.217 -19.3612 20.8919 199.369 -35.9975 314.42L1623.25 317.752L1557.25 111.41C1524.23 158.209 1402.8 216.616 1181.25 75.8463C904.312 -100.116 1103.63 217.678 730.676 250.463C357.726 283.247 380.132 83.0053 257.401 26.135Z" fill="url(#paint0_linear_1299_3813)"/>
-</g>
-<defs>
-<filter id="filter0_f_1299_3813" x="-56" y="0" width="1699.25" height="337.752" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-<feFlood flood-opacity="0" result="BackgroundImageFix"/>
-<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
-<feGaussianBlur stdDeviation="10" result="effect1_foregroundBlur_1299_3813"/>
-</filter>
-<linearGradient id="paint0_linear_1299_3813" x1="1053.71" y1="-202.125" x2="1054.93" y2="611.484" gradientUnits="userSpaceOnUse">
-<stop offset="0.45" stop-color="#AACEFF" stop-opacity="0.9"/>
-<stop offset="1" stop-color="white" stop-opacity="0"/>
-</linearGradient>
-</defs>
+      {wave && theme !== "dark" && (
+        <div className="hidden lg:block fixed inset-x-0 pointer-events-none bottom-8">
+<svg
+  width="100%"
+  height="750"
+  viewBox="0 0 1440 398"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+  preserveAspectRatio="xMidYMax slice"
+  className="bottom-0 left-0 w-full"
+  style={{ transform: "translateY(50%)" }}
+>
+  <g filter="url(#filter_blur_custom)">
+    <path
+      d="M257.401 6.13501C159.217 -39.3612 20.8919 179.369 -35.9975 294.42L1623.25 297.752L1557.25 91.4097C1524.23 138.209 1402.8 196.616 1181.25 55.8463C904.312 -120.116 1103.63 197.678 730.676 230.463C357.726 263.247 380.132 63.0053 257.401 6.13501Z"
+      fill="url(#paint0_linear_converted)"
+    />
+  </g>
+
+  <defs>
+    <filter
+      id="filter_blur_custom"
+      x="-56"
+      y="-40"
+      width="1699.25"
+      height="357.752"
+      filterUnits="userSpaceOnUse"
+      color-interpolation-filters="sRGB"
+    >
+      <feFlood flood-opacity="0" result="BackgroundImageFix" />
+      <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
+      <feGaussianBlur stdDeviation="10" result="effect1_foregroundBlur" />
+    </filter>
+
+    <linearGradient
+      id="paint0_linear_converted"
+      x1="1053.71"
+      y1="-202.125"
+      x2="1054.93"
+      y2="611.484"
+      gradientUnits="userSpaceOnUse"
+    >
+      <stop offset="0.45" stop-color="#AACEFF" stop-opacity="0.9" />
+      <stop offset="1" stop-color="white" stop-opacity="0" />
+    </linearGradient>
+  </defs>
 </svg>
+
 
         </div>
       )}
       {/* Bottom wave decoration */}
       {wave && theme === "dark" && (
         <div className="hidden lg:block fixed inset-x-0 pointer-events-none bottom-48">
-          <svg
-            width="100%"
-            height="450"
-            viewBox="0 0 1440 298"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            preserveAspectRatio="xMidYMax slice"
-            className="bottom-0 left-0 w-full"
-            style={{ transform: "translateY(50%)" }}
-          >
-            <path
-              d="M257.401 6.13501C159.217 -39.3612 20.8919 179.369 -35.9975 294.42L1623.25 297.752L1557.25 91.4097C1524.23 138.209 1402.8 196.616 1181.25 55.8463C904.312 -120.116 1103.63 197.678 730.676 230.463C357.726 263.247 380.132 63.0053 257.401 6.13501Z"
-              fill="url(#paint0_linear_bottom)"
-            />
-            <defs>
-              <linearGradient
-                id="paint0_linear_bottom"
-                x1="1053.71"
-                y1="-222.125"
-                x2="1054.93"
-                y2="591.484"
-                gradientUnits="userSpaceOnUse"
-              >
-                <stop stopColor="#016BFF" stopOpacity="0.8" />
-                <stop offset="1" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-          </svg>
+<svg
+  width="100%"
+  height="750"
+  viewBox="0 0 1440 398"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+  preserveAspectRatio="xMidYMax slice"
+  className="bottom-0 left-0 w-full"
+  style={{ transform: "translateY(50%)" }}
+>
+  <g filter="url(#filter_blur_custom_bottom)">
+    <path
+      d="M257.401 6.13501C159.217 -39.3612 20.8919 179.369 -35.9975 294.42L1623.25 297.752L1557.25 91.4097C1524.23 138.209 1402.8 196.616 1181.25 55.8463C904.312 -120.116 1103.63 197.678 730.676 230.463C357.726 263.247 380.132 63.0053 257.401 6.13501Z"
+      fill="url(#paint0_linear_bottom_converted)"
+    />
+  </g>
+
+  <defs>
+
+    <filter
+      id="filter_blur_custom_bottom"
+      x="-56"
+      y="-40"
+      width="1699.25"
+      height="357.752"
+      filterUnits="userSpaceOnUse"
+      color-interpolation-filters="sRGB"
+    >
+      <feFlood flood-opacity="0" result="BackgroundImageFix" />
+      <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
+      <feGaussianBlur stdDeviation="10" result="effect1_foregroundBlur" />
+    </filter>
+
+    <linearGradient
+      id="paint0_linear_bottom_converted"
+      x1="1053.71"
+      y1="-222.125"
+      x2="1054.93"
+      y2="591.484"
+      gradientUnits="userSpaceOnUse"
+    >
+      <stop stop-color="#016BFF" stop-opacity="0.8" />
+      <stop offset="1" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+</svg>
+
         </div>
       )}
     </div>
