@@ -14,6 +14,7 @@ import { DataTable } from "@/components/common/data-table"
 import { MobileListView } from "@/components/common/mobile-list-view"
 import { useTheme } from "@/contexts/theme-context"
 import { useArticles } from "@/hooks/use-articles"
+import { StatusBadge } from "@/components/common/status-badge"
 
 const tabs = ["All Articles", "Pending Approval", "Published Articles"]
 const filters = ["Category", "Author", "Date Range"]
