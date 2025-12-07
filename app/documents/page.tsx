@@ -14,6 +14,8 @@ import { MobileListView } from "@/components/common/mobile-list-view"
 import { useTheme } from "@/contexts/theme-context"
 import { useDocuments } from "@/hooks/use-documents"
 import type { Document } from "@/lib/types"
+import Link from "next/link"
+
 
 const tabs = ["All Documents", "Pending Approval", "Approved Documents"]
 const filters = ["Category", "Author", "Date Range"]
@@ -62,16 +64,19 @@ export default function DocumentManagementPage() {
                 <StatsCard key={s.title} title={s.title} value={s.value} variant="compact" />
               ))}
               <div className="flex items-center justify-center h-24">
-                <Button
-                  className={`text-md rounded-lg font-medium transition-colors shadow-md px-8 py-6 ${
-                    theme === "dark"
-                      ? "bg-[#0F2A48] hover:bg-[#34495E] text-white"
-                      : "bg-blue-600 hover:bg-blue-700 text-white"
-                  }`}
-                >
+              <Button
+                asChild
+                className={`text-md rounded-lg font-medium transition-colors shadow-md px-8 py-6 ${
+                  theme === "dark"
+                    ? "bg-[#0F2A48] hover:bg-[#34495E] text-white"
+                    : "bg-blue-600 hover:bg-blue-700 text-white"
+                }`}
+              >
+                <Link href="/documents/add" className="flex items-center">
                   <Plus className="h-4 w-4 mr-2" />
                   Add Document
-                </Button>
+                </Link>
+              </Button>
               </div>
             </div>
 
@@ -84,14 +89,17 @@ export default function DocumentManagementPage() {
                   Document Management
                 </h1>
                 <Button
+                asChild
                   className={`text-lg rounded-lg font-medium transition-colors shadow-md px-8 py-6 whitespace-nowrap flex-shrink-0 ${
                     theme === "dark"
                       ? "bg-[#0F2A48] hover:bg-[#34495E] text-white"
                       : "bg-blue-600 hover:bg-blue-700 text-white"
                   }`}
                 >
+                <Link href="/documents/add" className="flex items-center">
                   <Plus className="h-4 w-4 mr-2" />
                   Add Document
+                </Link>
                 </Button>
               </div>
 
