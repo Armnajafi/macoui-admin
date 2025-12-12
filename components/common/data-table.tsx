@@ -73,7 +73,7 @@ export function DataTable<T extends { id: string | number }>({
                   {col.header}
                 </th>
               ))}
-              <th className="px-6 py-5 text-left text-base font-medium">Actions</th>
+            
             </tr>
           </thead>
 

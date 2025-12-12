@@ -10,6 +10,7 @@ import DashboardLayout from "@/components/layout/dashboard-layout"
 import { MobileSearchBar } from "@/components/common/mobile-search-bar"
 import { useTheme } from "@/contexts/theme-context"
 import { useDashboard } from "@/hooks/use-dashboard"
+import Link from "next/link"
 
 const iconMap = {
   Ship,
@@ -173,20 +174,50 @@ export default function DashboardPage() {
                     <CardTitle className={textColor}>Quick Actions</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
-                    {["+ Add Broker", "+ Add Broker", "+ Add Broker", "+ Add Product"].map((txt, idx) => (
-                      <Button
-                        key={idx}
-                        size="sm"
-                        className={`w-full justify-start ${
-                          theme === "dark"
-                            ? "bg-[#1A365D] hover:bg-[#475569] text-white"
-                            : "bg-gray-100 hover:bg-gray-200 text-slate-700"
-                        }`}
-                      >
-                        {txt}
-                      </Button>
-                    ))}
-                  </CardContent>
+    <Link
+      href="/brokers/add"
+      className={`block w-full text-left px-3 py-1.5 text-sm rounded-md transition-colors ${
+        theme === "dark"
+          ? "bg-[#1A365D] hover:bg-[#475569] text-white"
+          : "bg-gray-100 hover:bg-gray-200 text-slate-700"
+      }`}
+    >
+      + Add Broker
+    </Link>
+
+    <Link
+      href="/brokers/add"
+      className={`block w-full text-left px-3 py-1.5 text-sm rounded-md transition-colors ${
+        theme === "dark"
+          ? "bg-[#1A365D] hover:bg-[#475569] text-white"
+          : "bg-gray-100 hover:bg-gray-200 text-slate-700"
+      }`}
+    >
+      + Add Broker
+    </Link>
+
+    <Link
+      href="/brokers/add"
+      className={`block w-full text-left px-3 py-1.5 text-sm rounded-md transition-colors ${
+        theme === "dark"
+          ? "bg-[#1A365D] hover:bg-[#475569] text-white"
+          : "bg-gray-100 hover:bg-gray-200 text-slate-700"
+      }`}
+    >
+      + Add Broker
+    </Link>
+
+    <Link
+      href="/products/add"
+      className={`block w-full text-left px-3 py-1.5 text-sm rounded-md transition-colors ${
+        theme === "dark"
+          ? "bg-[#1A365D] hover:bg-[#475569] text-white"
+          : "bg-gray-100 hover:bg-gray-200 text-slate-700"
+      }`}
+    >
+      + Add Product
+    </Link>
+  </CardContent>
                 </Card>
               </div>
             </div>
@@ -323,21 +354,51 @@ export default function DashboardPage() {
                     </CardHeader>
                   </CollapsibleTrigger>
                   <CollapsibleContent className="pb-5">
-                    <CardContent className="space-y-2 pt-0">
-                      {["+ Add Broker", "+ Add Broker", "+ Add Broker", "+ Add Product"].map((txt, idx) => (
-                        <Button
-                          key={idx}
-                          size="sm"
-                          className={`w-full justify-start ${
-                            theme === "dark"
-                              ? "bg-[#1A365D] hover:bg-[#475569] text-white"
-                              : "bg-gray-100 hover:bg-gray-200 text-slate-700"
-                          }`}
-                        >
-                          {txt}
-                        </Button>
-                      ))}
-                    </CardContent>
+                  <CardContent className="space-y-2 pt-0">
+    <Link
+      href="/brokers/add"
+      className={`block w-full text-left px-3 py-1.5 text-sm rounded-md transition-colors ${
+        theme === "dark"
+          ? "bg-[#1A365D] hover:bg-[#475569] text-white"
+          : "bg-gray-100 hover:bg-gray-200 text-slate-700"
+      }`}
+    >
+      + Add Broker
+    </Link>
+
+    <Link
+      href="/brokers/add"
+      className={`block w-full text-left px-3 py-1.5 text-sm rounded-md transition-colors ${
+        theme === "dark"
+          ? "bg-[#1A365D] hover:bg-[#475569] text-white"
+          : "bg-gray-100 hover:bg-gray-200 text-slate-700"
+      }`}
+    >
+      + Add Broker
+    </Link>
+
+    <Link
+      href="/brokers/add"
+      className={`block w-full text-left px-3 py-1.5 text-sm rounded-md transition-colors ${
+        theme === "dark"
+          ? "bg-[#1A365D] hover:bg-[#475569] text-white"
+          : "bg-gray-100 hover:bg-gray-200 text-slate-700"
+      }`}
+    >
+      + Add Broker
+    </Link>
+
+    <Link
+      href="/products/add"
+      className={`block w-full text-left px-3 py-1.5 text-sm rounded-md transition-colors ${
+        theme === "dark"
+          ? "bg-[#1A365D] hover:bg-[#475569] text-white"
+          : "bg-gray-100 hover:bg-gray-200 text-slate-700"
+      }`}
+    >
+      + Add Product
+    </Link>
+  </CardContent>
                   </CollapsibleContent>
                 </Card>
               </Collapsible>

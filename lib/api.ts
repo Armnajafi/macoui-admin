@@ -38,45 +38,48 @@ export function isAuthenticated(): boolean {
 
 // Generic fetch wrapper with authentication
 async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
-  const token = getAuthToken()
+  const token = getAuthToken();
+  const isFormData = options.body instanceof FormData;
 
   const headers: HeadersInit = {
-    "Content-Type": "application/json",
+    // فقط اگر FormData نباشه، JSON بذار
+    ...(!isFormData && { "Content-Type": "application/json" }),
     ...(token && { Authorization: `Bearer ${token}` }),
     ...options.headers,
-  }
-  console.log(token)
+  };
 
+  // اگر FormData باشه، Content-Type رو کامل حذف کن
+  if (isFormData) {
+    delete (headers as any)["Content-Type"];
+  }
+
+  // بقیه کد مثل قبل...
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
       headers,
-    })
-    if (!response.ok) {
-      if (response.status === 401) {
-        removeAuthToken()
-      }
+    });
 
-      const errorData = await response.json().catch(() => ({}))
+    if (!response.ok) {
+      if (response.status === 401) removeAuthToken();
+      const errorData = await response.json().catch(() => ({}));
       return {
         data: null,
-        error: {
-          message: errorData.message || "An error occurred",
-          status: response.status,
-        },
-      }
+        error: { message: errorData.message || errorData.detail || "Request failed", status: response.status },
+      };
     }
 
-    const data = await response.json()
-    return { data, error: null }
+    const contentType = response.headers.get("content-type");
+    if (contentType?.includes("application/json")) {
+      const data = await response.json();
+      return { data, error: null };
+    }
+    return { data: null as T, error: null };
   } catch (error) {
     return {
       data: null,
-      error: {
-        message: error instanceof Error ? error.message : "Network error",
-        status: 0,
-      },
-    }
+      error: { message: error instanceof Error ? error.message : "Network error", status: 0 },
+    };
   }
 }
 
@@ -85,13 +88,6 @@ export function apiGet<T>(endpoint: string): Promise<ApiResponse<T>> {
   return apiFetch<T>(endpoint, { method: "GET" })
 }
 
-// API POST method
-export function apiPost<T>(endpoint: string, body: unknown): Promise<ApiResponse<T>> {
-  return apiFetch<T>(endpoint, {
-    method: "POST",
-    body: JSON.stringify(body),
-  })
-}
 
 // API PUT method
 export function apiPut<T>(endpoint: string, body: unknown): Promise<ApiResponse<T>> {
@@ -102,11 +98,47 @@ export function apiPut<T>(endpoint: string, body: unknown): Promise<ApiResponse<
 }
 
 // API PATCH method
-export function apiPatch<T>(endpoint: string, body: unknown): Promise<ApiResponse<T>> {
+// API POST method — حالا هم JSON و هم FormData رو پشتیبانی می‌کنه
+export async function apiPost<T>(
+  endpoint: string,
+  body?: unknown,
+  options: RequestInit = {}
+): Promise<ApiResponse<T>> {
+  const isFormData = body instanceof FormData;
+
+  const headers: HeadersInit = {
+    // فقط اگر JSON باشه Content-Type رو بذار
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
+    ...options.headers,
+  };
+
+  return apiFetch<T>(endpoint, {
+    method: "POST",
+    body: isFormData ? (body as FormData) : body ? JSON.stringify(body) : undefined,
+    headers,
+    ...options,
+  });
+}
+
+// API PATCH method — برای آپدیت هم همین مشکل بود
+export async function apiPatch<T>(
+  endpoint: string,
+  body?: unknown,
+  options: RequestInit = {}
+): Promise<ApiResponse<T>> {
+  const isFormData = body instanceof FormData;
+
+  const headers: HeadersInit = {
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
+    ...options.headers,
+  };
+
   return apiFetch<T>(endpoint, {
     method: "PATCH",
-    body: JSON.stringify(body),
-  })
+    body: isFormData ? (body as FormData) : body ? JSON.stringify(body) : undefined,
+    headers,
+    ...options,
+  });
 }
 
 // API DELETE method

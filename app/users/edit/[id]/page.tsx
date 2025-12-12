@@ -1,8 +1,9 @@
-// app/users/add/page.tsx
+// app/users/edit/[id]/page.tsx
+
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useMemo } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,27 +24,50 @@ const steps = [
   { id: 3, name: "Access & Permissions" },
 ];
 
-export default function AddUserPage() {
+export default function EditUserPage() {
   const router = useRouter();
-  const { createUser } = useUsers();
+  const { id } = useParams();
+  const { users, updateUser, isLoading: isHookLoading } = useUsers();
+
+  const user = users.find(u => u.id === id);
 
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     email: "",
-    password: "",
-    confirmPassword: "",
     first_name: "",
     last_name: "",
     phone: "",
     country: "",
     gender: "" as "M" | "F" | "",
     role: "" as "AD" | "RE" | "VE" | "VI",
-    status: "PPC" as "PPC" | "V" | "R" | "PAR",
-    preferred_language: "en",
+    status: "" as "PPC" | "V" | "R" | "PAR",
   });
 
+  // پر کردن فرم وقتی کاربر لود شد
+  useEffect(() => {
+    if (!id || !users.length) return;
+  
+    const currentUser = users.find(u => u.id === id);
+    if (!currentUser) return;
+  
+    setFormData({
+      email: currentUser.email,
+      first_name: currentUser.name.split(" ")[0] || "",
+      last_name: currentUser.name.split(" ").slice(1).join(" ") || "",
+      phone: currentUser.phone || "",
+      country: currentUser.country || "",
+      gender: "" as any,
+      role: currentUser.role === "Admin" ? "AD" :
+            currentUser.role === "Registered" ? "RE" :
+            currentUser.role === "Verified" ? "VE" : "VI",
+      status: currentUser.status.includes("Pending") ? "PPC" :
+              currentUser.status === "Verified" ? "V" :
+              currentUser.status === "Rejected" ? "R" :
+              currentUser.status.includes("Approval") ? "PAR" : "PPC",
+    });
+  }, []); // فقط یک بار!
   const nextStep = () => currentStep < 3 && setCurrentStep(currentStep + 1);
   const prevStep = () => currentStep > 1 && setCurrentStep(currentStep - 1);
 
@@ -51,47 +75,46 @@ export default function AddUserPage() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const validateStep1 = () => {
-    if (!formData.email.trim()) return alert("Email is required");
-    if (!formData.password) return alert("Password is required");
-    if (formData.password !== formData.confirmPassword) return alert("Passwords do not match");
-    if (formData.password.length < 8) return alert("Password must be at least 8 characters");
-    return true;
-  };
-
-  const validateStep2 = () => {
-    if (!formData.first_name.trim()) return alert("First name is required");
-    if (!formData.last_name.trim()) return alert("Last name is required");
-    return true;
-  };
-
-  const handleSubmit = async () => {
-    if (!validateStep1() || !validateStep2()) return;
-
+  const handleUpdate = async () => {
     setIsLoading(true);
 
-    const result = await createUser({
+    const payload: any = {
       email: formData.email,
-      password: formData.password,
       first_name: formData.first_name,
       last_name: formData.last_name,
-      phone: formData.phone || undefined,
-      country: formData.country ? Number(formData.country) : undefined,
-      gender: formData.gender || undefined,
+      phone: formData.phone || null,
+      country: formData.country ? Number(formData.country) : null,
       role: formData.role,
       status: formData.status,
-      preferred_language: formData.preferred_language,
-    });
+    };
+
+    const result = await updateUser(id as string, payload);
 
     setIsLoading(false);
 
     if (result.success) {
-      alert("User created successfully!");
+      alert("User updated successfully!");
       router.push("/users");
     } else {
-      alert(result.message || "Failed to create user");
+      alert(result.message || "Failed to update user");
     }
   };
+
+  if (isHookLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen text-xl">
+        Loading user...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen text-xl text-red-600">
+        User not found
+      </div>
+    );
+  }
 
   const progressPercentage = ((currentStep - 1) / (steps.length - 1)) * 100;
 
@@ -101,10 +124,10 @@ export default function AddUserPage() {
       <div className="w-full bg-[#1A365D] shadow-lg">
         <div className="max-w-[1226px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-[77px]">
           <h2 className="text-xl sm:text-2xl md:text-[44px] font-semibold text-white mb-2">
-            Add New User
+            Edit User
           </h2>
           <p className="text-sm sm:text-xl md:text-[28px] text-white opacity-90">
-            Create a new account for the maritime management platform
+            Update user information and permissions
           </p>
         </div>
       </div>
@@ -138,86 +161,66 @@ export default function AddUserPage() {
 
         {/* Form */}
         <div className="bg-white rounded-3xl shadow-lg border border-gray-200 p-8 md:p-12">
-          {/* Step 1: Account Info */}
+          {/* همون ۳ استپ مثل Add، فقط بدون پسورد */}
           {currentStep === 1 && (
             <div>
               <h3 className="text-2xl font-bold text-gray-800 mb-10">Account Information</h3>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 <div className="space-y-7">
                   <div>
-                    <Label htmlFor="email">Email Address *</Label>
+                    <Label>Email Address</Label>
                     <Input
-                      id="email"
                       type="email"
-                      placeholder="user@example.com"
                       className="mt-2 h-12"
                       value={formData.email}
                       onChange={(e) => handleInputChange("email", e.target.value)}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="password">Password *</Label>
+                    <Label>Password</Label>
                     <Input
-                      id="password"
                       type="password"
-                      placeholder="Minimum 8 characters"
+                      placeholder="Leave blank to keep current password"
                       className="mt-2 h-12"
-                      value={formData.password}
-                      onChange={(e) => handleInputChange("password", e.target.value)}
+                      disabled
                     />
-                  </div>
-                  <div>
-                    <Label htmlFor="confirmPassword">Confirm Password *</Label>
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      placeholder="Repeat password"
-                      className="mt-2 h-12"
-                      value={formData.confirmPassword}
-                      onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-                    />
+                    <p className="text-xs text-gray-500 mt-2">Password cannot be changed from here</p>
                   </div>
                 </div>
                 <div className="flex items-center justify-center bg-gray-50 rounded-2xl">
                   <div className="text-center">
                     <UserPlus className="w-24 h-24 text-[#1A365D] mx-auto mb-4" />
-                    <p className="text-gray-600">Enter login credentials</p>
+                    <p className="text-gray-600">Account details</p>
                   </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Step 2: Personal Details */}
           {currentStep === 2 && (
             <div>
               <h3 className="text-2xl font-bold text-gray-800 mb-10">Personal Details</h3>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 <div className="space-y-7">
                   <div>
-                    <Label htmlFor="first_name">First Name *</Label>
+                    <Label>First Name</Label>
                     <Input
-                      id="first_name"
-                      placeholder="John"
                       className="mt-2 h-12"
                       value={formData.first_name}
                       onChange={(e) => handleInputChange("first_name", e.target.value)}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="last_name">Last Name *</Label>
+                    <Label>Last Name</Label>
                     <Input
-                      id="last_name"
-                      placeholder="Doe"
                       className="mt-2 h-12"
                       value={formData.last_name}
                       onChange={(e) => handleInputChange("last_name", e.target.value)}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="phone">Phone Number</Label>
+                    <Label>Phone Number</Label>
                     <Input
-                      id="phone"
                       placeholder="+989123456789"
                       className="mt-2 h-12"
                       value={formData.phone}
@@ -227,7 +230,7 @@ export default function AddUserPage() {
                 </div>
                 <div className="space-y-7">
                   <div>
-                    <Label htmlFor="country">Country</Label>
+                    <Label>Country</Label>
                     <Select
                       value={formData.country}
                       onValueChange={(value) => handleInputChange("country", value)}
@@ -243,39 +246,23 @@ export default function AddUserPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div>
-                    <Label htmlFor="gender">Gender</Label>
-                    <Select
-                      value={formData.gender}
-                      onValueChange={(value: "M" | "F") => handleInputChange("gender", value)}
-                    >
-                      <SelectTrigger className="mt-2 h-12">
-                        <SelectValue placeholder="Select gender" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="M">Male</SelectItem>
-                        <SelectItem value="F">Female</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Step 3: Role & Status */}
           {currentStep === 3 && (
             <div>
               <h3 className="text-2xl font-bold text-gray-800 mb-10">Access & Permissions</h3>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 <div>
-                  <Label htmlFor="role">User Role *</Label>
+                  <Label>User Role</Label>
                   <Select
                     value={formData.role}
-                    onValueChange={(value: "AD" | "RE" | "VE" | "VI") => handleInputChange("role", value)}
+                    onValueChange={(value: any) => handleInputChange("role", value)}
                   >
                     <SelectTrigger className="mt-2 h-12">
-                      <SelectValue placeholder="Select role" />
+                      <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="AD">Admin</SelectItem>
@@ -286,13 +273,13 @@ export default function AddUserPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="status">Account Status</Label>
+                  <Label>Account Status</Label>
                   <Select
                     value={formData.status}
-                    onValueChange={(value: "PPC" | "V" | "R" | "PAR") => handleInputChange("status", value)}
+                    onValueChange={(value: any) => handleInputChange("status", value)}
                   >
                     <SelectTrigger className="mt-2 h-12">
-                      <SelectValue placeholder="Select status" />
+                      <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="PPC">Pending Profile Completion</SelectItem>
@@ -310,8 +297,8 @@ export default function AddUserPage() {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div><span className="text-gray-600">Name:</span> {formData.first_name} {formData.last_name}</div>
                   <div><span className="text-gray-600">Email:</span> {formData.email}</div>
-                  <div><span className="text-gray-600">Role:</span> {formData.role ? roleMap[formData.role] : "Not set"}</div>
-                  <div><span className="text-gray-600">Status:</span> {formData.status ? statusMap[formData.status] : "Not set"}</div>
+                  <div><span className="text-gray-600">Role:</span> {formData.role ? roleMap[formData.role] : "—"}</div>
+                  <div><span className="text-gray-600">Status:</span> {formData.status ? statusMap[formData.status] : "—"}</div>
                 </div>
               </div>
             </div>
@@ -333,19 +320,19 @@ export default function AddUserPage() {
                 </Button>
                 <Button
                   size="lg"
-                  onClick={handleSubmit}
+                  onClick={handleUpdate}
                   disabled={isLoading}
                   className="bg-green-600 hover:bg-green-700 px-10"
                 >
                   {isLoading ? (
                     <>
                       <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      Creating...
+                      Updating...
                     </>
                   ) : (
                     <>
                       <Save className="w-5 h-5 mr-2" />
-                      Create User
+                      Update User
                     </>
                   )}
                 </Button>
@@ -353,11 +340,7 @@ export default function AddUserPage() {
             ) : (
               <Button
                 size="lg"
-                onClick={() => {
-                  if (currentStep === 1 && !validateStep1()) return;
-                  if (currentStep === 2 && !validateStep2()) return;
-                  nextStep();
-                }}
+                onClick={nextStep}
                 className="bg-[#1A365D] hover:bg-[#152a4a] px-10"
               >
                 Next

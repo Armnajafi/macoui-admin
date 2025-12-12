@@ -1,85 +1,198 @@
-"use client"
+"use client";
 
-import useSWR from "swr"
-import { swrFetcher } from "@/lib/api"
+import useSWR, { mutate } from "swr";
+import { swrFetcher, api } from "@/lib/api";
 
-// Activity type for activity configuration
-interface Activity {
-  id: string
-  name: string
-  type: string
-  status: string
-  date: string
+// Frontend display model
+export interface Activity {
+  id: string;           // We'll use the backend PK as string
+  name: string;         // Maps to "activity_display" or "activity"
+  type: string;         // You can extend this later if needed
+  status: "Active" | "Inactive";
+  date: string;         // Formatted date from created_at / updated_at
 }
 
-interface ActivitiesResponse {
-  activities: Activity[]
-  stats: {
-    total: number
-    active: number
-    inactive: number
-  }
+// API response shape (single item)
+interface ActivityConfigResponse {
+  id: number;
+  activity: string;
+  activity_display?: string;
+  heading: string;
+  subheading: string;
+  short_description: string;
+  created_at: string;
+  updated_at: string;
 }
 
-// Fallback mock data with proper Activity type
+interface ActivitiesApiResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: ActivityConfigResponse[];
+}
+
+// Mock / fallback data
 const mockActivities: Activity[] = [
   {
-    id: "ACT-001",
-    name: "Ship Trading",
-    type: "Trading",
-    status: "Active",
-    date: "Jan 19, 2024",
-  },
-  {
-    id: "ACT-002",
-    name: "Ship Financing",
+    id: "1",
+    name: "Ship Finance",
     type: "Finance",
     status: "Active",
-    date: "Jan 17, 2024",
+    date: "2025-01-15",
   },
   {
-    id: "ACT-003",
-    name: "Ship Management",
-    type: "Management",
+    id: "2",
+    name: "Maritime Trading",
+    type: "Trading",
     status: "Active",
-    date: "Jan 12, 2024",
+    date: "2025-01-14",
   },
-  {
-    id: "ACT-004",
-    name: "Ship Brokerage",
-    type: "Brokerage",
-    status: "Inactive",
-    date: "Jan 11, 2024",
-  },
-  {
-    id: "ACT-005",
-    name: "Crew Management",
-    type: "HR",
-    status: "Active",
-    date: "Jan 08, 2024",
-  },
-]
+];
 
 const mockStats = {
-  total: 15,
-  active: 12,
-  inactive: 3,
-}
+  total: 8,
+  active: 7,
+  inactive: 1,
+};
+
+const API_URL = "/api/management/core/activity-config/";
 
 export function useActivities() {
-  const { data, error, isLoading, mutate } = useSWR<ActivitiesResponse>("/activities", swrFetcher, {
+  const {
+    data,
+    error,
+    isLoading,
+  } = useSWR<ActivitiesApiResponse>(API_URL, swrFetcher, {
     fallbackData: {
-      activities: mockActivities,
-      stats: mockStats,
+      count: mockStats.total,
+      next: null,
+      previous: null,
+      results: mockActivities.map((a, i) => ({
+        id: Number(a.id),
+        activity: a.name.toLowerCase().replace(/\s+/g, "_"),
+        activity_display: a.name,
+        heading: `${a.name} Projects`,
+        subheading: `Manage ${a.name.toLowerCase()} configurations`,
+        short_description: `Configuration for ${a.name}`,
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-15T00:00:00Z",
+      })),
     },
     revalidateOnFocus: false,
-  })
+    revalidateOnReconnect: true,
+  });
 
+  // Helper: transform backend item → frontend Activity
+  const mapToActivity = (item: ActivityConfigResponse): Activity => ({
+    id: String(item.id),
+    name: item.activity_display || item.activity.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()),
+    type: item.activity.includes("finance") ? "Finance" :
+          item.activity.includes("trading") ? "Trading" :
+          item.activity.includes("brokerage") ? "Brokerage" : "Other",
+    status: "Active", // You can add a real status field later if needed
+    date: new Date(item.updated_at || item.created_at).toLocaleDateString("en-US", {
+      month: "short",
+      day: "2-digit",
+      year: "numeric",
+    }),
+  });
+
+  // Create new activity config
+  const createActivity = async (payload: {
+    activity: string;
+    heading: string;
+    subheading: string;
+    short_description: string;
+  }) => {
+    try {
+      const response = await api.post(API_URL, payload);
+      await mutate(API_URL); // Refresh list
+      return {
+        success: true,
+        data: response.data,
+        message: "Activity created successfully",
+      };
+    } catch (err: any) {
+      console.error("Create activity failed:", err);
+      const message =
+        err.response?.data?.detail ||
+        err.response?.data?.activity?.[0] ||
+        "Failed to create activity";
+      return {
+        success: false,
+        error: err,
+        message,
+      };
+    }
+  };
+
+  // Update existing activity config
+  const updateActivity = async (
+    id: string | number,
+    payload: Partial<{
+      heading: string;
+      subheading: string;
+      short_description: string;
+    }>
+  ) => {
+    try {
+      await api.patch(`${API_URL}${id}/`, payload);
+      await mutate(API_URL);
+      return { success: true, message: "Activity updated successfully" };
+    } catch (err: any) {
+      console.error("Update failed:", err);
+      return {
+        success: false,
+        message: "Failed to update activity",
+        error: err,
+      };
+    }
+  };
+
+  // Delete activity config
+  const deleteActivity = async (id: string | number) => {
+    if (!confirm("Are you sure you want to delete this activity configuration?")) {
+      return;
+    }
+
+    try {
+      await api.delete(`${API_URL}${id}/`);
+      await mutate(API_URL);
+      alert("Activity deleted successfully");
+    } catch (err) {
+      console.error("Delete failed:", err);
+      alert("Failed to delete activity");
+    }
+  };
+
+  // Processed data
+  const rawResults = Array.isArray(data) ? data : [];
+  
+  const activities: Activity[] = rawResults.map(mapToActivity);
+
+  const stats = {
+    total: data?.count ?? mockStats.total,
+    active: activities.filter(a => a.status === "Active").length,
+    inactive: activities.filter(a => a.status === "Inactive").length,
+  };
+
+  console.log("Final activities array:", activities);
   return {
-    activities: data?.activities ?? mockActivities,
-    stats: data?.stats ?? mockStats,
+    activities,
+    stats,
+    count: data?.count ?? mockStats.total,
+    nextPage: data?.next ?? null,
+    previousPage: data?.previous ?? null,
     isLoading,
-    isError: error,
-    mutate,
-  }
+    isError: !!error,
+    error,
+
+    // CRUD actions
+    createActivity,
+    updateActivity,
+    deleteActivity,
+
+    // For advanced cache control
+    mutate: () => mutate(API_URL),
+  };
 }
