@@ -45,13 +45,13 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise
     ...(token && { Authorization: `Bearer ${token}` }),
     ...options.headers,
   }
+  console.log(token)
 
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
       headers,
     })
-
     if (!response.ok) {
       if (response.status === 401) {
         removeAuthToken()

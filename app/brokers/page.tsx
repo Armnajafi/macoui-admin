@@ -1,8 +1,10 @@
+// app/dashboard/brokers/page.tsx
+
 "use client"
 
 import { useState } from "react"
 import { Card } from "@/components/ui/card"
-import { Plus } from "lucide-react"
+import { Plus, ShieldAlert, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import DashboardLayout from "@/components/layout/dashboard-layout"
 import { MobileSearchBar } from "@/components/common/mobile-search-bar"
@@ -12,109 +14,132 @@ import { FilterButtons } from "@/components/common/filter-buttons"
 import { DataTable } from "@/components/common/data-table"
 import { MobileListView } from "@/components/common/mobile-list-view"
 import { useTheme } from "@/contexts/theme-context"
-import { useBrokers } from "@/hooks/use-brokers"
-import type { Broker } from "@/lib/types"
+import { useBrokers, Broker } from "@/hooks/use-brokers"
+import { BrokerDetailModal } from "@/components/ui/broker-detail-modal" // درست!
+
+const isAdmin = true
+const authLoading = false
 
 const tabs = ["All Brokers", "Pending Approval", "Verified Brokers"]
 const filters = ["Status", "Company", "Location"]
 
-const columns: TableColumn<Broker>[] = [
-  { key: "id", header: "Broker ID" },
-  { key: "name", header: "Broker Name" },
-  { key: "company", header: "Company" },
-  { key: "location", header: "Location" },
-  { key: "status", header: "Status" },
-  { key: "date", header: "Date Created" },
-]
-
 export default function BrokerManagementPage() {
-  const [activeTab, setActiveTab] = useState("all brokers")
+  const [activeTab, setActiveTab] = useState("All Brokers")
+  const [selectedBroker, setSelectedBroker] = useState<Broker | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [page, setPage] = useState(1)
+
   const { theme } = useTheme()
-  const { brokers, stats } = useBrokers()
+  const { brokers, stats, total, isLoading, deleteBroker, updateBrokerStatus } = useBrokers()
 
   const cardBg = theme === "dark" ? "bg-transparent lg:bg-[#0F2A48]" : "bg-transparent lg:bg-white"
 
-  const statsItems = [
-    { title: "Total Brokers", value: stats.total },
-    { title: "Pending Brokers", value: stats.pending },
+  const handleAction = (broker: any) => {  // any یا Broker — مهم نیست، کار می‌کنه
+    setSelectedBroker(broker)
+    setModalOpen(true)
+  }
+
+  const columns = [
+    { key: "id", header: "شناسه" },
+    { key: "name", header: "نام" },
+    { key: "company", header: "شرکت" },
+    { key: "location", header: "مکان" },
+    { key: "status", header: "وضعیت" },
+    { key: "date", header: "تاریخ" },
   ]
 
-  const mobileListItems = brokers.map((b) => ({
+  const mobileItems = brokers.map(b => ({
     id: b.id,
     title: b.name,
-    subtitle: b.id,
-    meta: [b.company, b.location, b.date],
-    createdBy: b.company,
+    subtitle: b.company,
+    meta: [b.location, b.date],
     status: b.status,
   }))
 
+  if (authLoading) return <div>در حال بارگذاری...</div>
+  if (!isAdmin) return <div className="text-center text-red-500 text-2xl mt-20">دسترسی ممنوع</div>
+
   return (
-    <DashboardLayout title="Broker Management" wave={true}>
+    <DashboardLayout title="مدیریت بروکرها" wave={true}>
       <MobileSearchBar />
 
-      {/* Desktop Stats Cards */}
-      <div className="hidden lg:grid mb-8 mx-20 grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-        {statsItems.map((s) => (
-          <StatsCard key={s.title} title={s.title} value={s.value} />
-        ))}
+      {/* Stats */}
+      <div className="hidden lg:grid grid-cols-4 gap-4 mt-6 mb-8 mx-20">
+        <StatsCard title="کل بروکرها" value={stats.total} />
+        <StatsCard title="در انتظار" value={stats.pending} />
+        <StatsCard title="تایید شده" value={stats.approved} />
+        <StatsCard title="رد شده" value={stats.rejected} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-8">
-        <Card className={`${cardBg} border-0 shadow-md`}>
-          <div className="md:mx-10 mx-4 md:space-y-8 space-y-6 py-6 md:py-0">
-            {/* Mobile Stats Grid */}
-            <div className="lg:hidden grid grid-cols-2 gap-3 mb-6">
-              {statsItems.map((s) => (
-                <StatsCard key={s.title} title={s.title} value={s.value} variant="compact" />
-              ))}
-              <div className="flex items-center justify-center h-24">
-                <Button
-                  className={`text-md rounded-lg font-medium transition-colors shadow-md px-8 py-6 ${
-                    theme === "dark"
-                      ? "bg-[#0F2A48] hover:bg-[#34495E] text-white"
-                      : "bg-blue-600 hover:bg-blue-700 text-white"
-                  }`}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Broker
-                </Button>
-              </div>
-            </div>
+      <Card className={`${cardBg} border-0 shadow-md`}>
+        <div className="md:mx-10 mx-4 py-6">
 
-            {/* Desktop Header Section */}
-            <div className="hidden lg:block">
-              <div className="flex items-center justify-between w-full">
-                <h1
-                  className={`text-4xl font-normal tracking-wide ${theme === "dark" ? "text-white" : "text-slate-900"}`}
-                >
-                  Broker Management
-                </h1>
-                <Button
-                  className={`text-lg rounded-lg font-medium transition-colors shadow-md px-8 py-6 whitespace-nowrap flex-shrink-0 ${
-                    theme === "dark"
-                      ? "bg-[#0F2A48] hover:bg-[#34495E] text-white"
-                      : "bg-blue-600 hover:bg-blue-700 text-white"
-                  }`}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Broker
-                </Button>
-              </div>
-            </div>
+          {/* موبایل stats */}
+          <div className="lg:hidden grid grid-cols-2 gap-3 mb-6">
+            <StatsCard title="کل" value={stats.total} variant="compact" />
+            <StatsCard title="در انتظار" value={stats.pending} variant="compact" />
+            <StatsCard title="تایید شده" value={stats.approved} variant="compact" />
+            <StatsCard title="رد شده" value={stats.rejected} variant="compact" />
+          </div>
 
+          <div className="hidden lg:flex justify-between items-center px-6 pt-6">
+            <h1 className="text-4xl font-normal">مدیریت بروکرها</h1>
+            <Button className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="h-5 w-5 ml-2" /> افزودن بروکر
+            </Button>
+          </div>
+
+          <div className="px-6 mt-8">
             <TabNavigation tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
             <FilterButtons filters={filters} />
-
-            {/* Desktop Table */}
-            <div className="hidden md:block">
-              <DataTable data={brokers} columns={columns} />
-            </div>
-
-            {/* Mobile List View */}
-            <MobileListView items={mobileListItems} />
           </div>
-        </Card>
-      </div>
+
+          <div className=" md:block mt-6">
+            <DataTable data={brokers} columns={columns} onAction={handleAction} />
+          </div>
+
+          {/* موبایل */}
+          <div className="md:hidden mt-6">
+            <MobileListView items={mobileItems} onAction={handleAction} />
+          </div>
+
+          {/* Pagination */}
+          {total > brokers.length && (
+            <div className="flex justify-center items-center gap-4 mt-8 pb-6">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page === 1}
+                onClick={() => setPage(p => p - 1)}
+              >
+                <ChevronRight className="h-4 w-4" />
+                قبلی
+              </Button>
+              <span className="text-sm">
+                صفحه {page} از {Math.ceil(total / 10)}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={brokers.length < 10}
+                onClick={() => setPage(p => p + 1)}
+              >
+                بعدی
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+
+        </div>
+      </Card>
+
+      <BrokerDetailModal
+        broker={selectedBroker}
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        onUpdateStatus={updateBrokerStatus}
+        onDelete={deleteBroker}
+      />
     </DashboardLayout>
   )
 }

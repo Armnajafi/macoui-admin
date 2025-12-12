@@ -1,76 +1,95 @@
 "use client"
 
 import useSWR from "swr"
-import { swrFetcher } from "@/lib/api"
+import { swrFetcher, api } from "@/lib/api"
 import type { Article } from "@/lib/types"
 
+// درستش اینه (مطمئن شو این آدرس با بک‌اندت یکیه)
+const API_URL = "/api/management/finance/news/"   // ← اینو درست کن
+
 interface ArticlesResponse {
-  articles: Article[]
-  stats: {
-    total: number
-    pending: number
-  }
+  count: number
+  results: Article[]
+  // اگه بک‌اند stats جدا میفرسته، بعداً اضافه میکنیم
 }
 
-// Fallback mock data for development
 const mockArticles: Article[] = [
   {
     id: 1,
     thumbnail: "/castle-by-lake.jpg",
-    title: "Lorem Ipsum Lorem",
-    category: "Activity 1",
-    author: "H.Smith",
+    title: "New Maritime Regulations in 2025",
+    category: "Regulations",
+    author: "H. Smith",
     status: "Published",
     date: "Jan 19, 2024",
   },
   {
     id: 2,
     thumbnail: "/beach-resort-aerial-view.jpg",
-    title: "Lorem Ipsum Lorem",
-    category: "Activity 3",
-    author: "H.Smith",
+    title: "Interview with Captain Johnson",
+    category: "Interviews",
+    author: "H. Smith",
     status: "Pending",
-    date: "Jan 19, 2024",
+    date: "Jan 18, 2024",
   },
   {
     id: 3,
     thumbnail: "/people-gathering-in-plaza.jpg",
-    title: "Lorem Ipsum Lorem",
-    category: "Activity 2",
-    author: "H.Smith",
-    status: "Approved",
-    date: "Jan 19, 2024",
-  },
-  {
-    id: 4,
-    thumbnail: "/sunset-landscape-path.jpg",
-    title: "Lorem Ipsum Lorem",
-    category: "Activity 2",
-    author: "H.Smith",
-    status: "Draft",
-    date: "Jan 19, 2024",
+    title: "Top 10 Shipping Routes",
+    category: "Analysis",
+    author: "H. Smith",
+    status: "Published",
+    date: "Jan 17, 2024",
   },
 ]
 
-const mockStats = {
-  total: 123,
-  pending: 10,
+const mockResponse: ArticlesResponse = {
+  count: 58,
+  results: mockArticles,
 }
 
 export function useArticles() {
-  const { data, error, isLoading, mutate } = useSWR<ArticlesResponse>("/articles", swrFetcher, {
-    fallbackData: {
-      articles: mockArticles,
-      stats: mockStats,
-    },
-    revalidateOnFocus: false,
-  })
+  const { data, error, isLoading, mutate } = useSWR<ArticlesResponse>(
+    API_URL,
+    swrFetcher,
+    {
+      fallbackData: mockResponse,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: true,
+    }
+  )
+
+  // تابع حذف مقاله (ساده و تمیز)
+  const deleteArticle = async (id: number) => {
+    if (!confirm("مطمئنی می‌خوای این مقاله رو حذف کنی؟")) return
+
+    try {
+      await api.delete(`${API_URL}${id}/`)  // درست: API_URL + id + /
+      await mutate() // لیست رو دوباره بگیر
+      alert("مقاله با موفقیت حذف شد ✅")
+    } catch (err: any) {
+      console.error("Delete failed:", err)
+      alert("حذف نشد! " + (err?.response?.data?.detail || "خطای سرور"))
+    }
+  }
+
+  // داده‌های واقعی یا mock
+  const articles = data?.results ?? mockResponse.results
+  const totalCount = data?.count ?? mockResponse.count
+
+  // آمار ساده (برای StatsCard)
+  const stats = {
+    total: totalCount,
+    pending: articles.filter(a => a.status === "Pending").length,
+    published: articles.filter(a => a.status === "Published").length,
+  }
 
   return {
-    articles: data?.articles ?? mockArticles,
-    stats: data?.stats ?? mockStats,
+    articles,
+    stats,
     isLoading,
-    isError: error,
+    isError: !!error,
+    deleteArticle,   // ← اینو حتماً برگردون
     mutate,
   }
 }

@@ -18,19 +18,33 @@ import type { User } from "@/lib/types"
 const tabs = ["All Users", "Active Users", "Inactive Users"]
 const filters = ["Status", "Role", "Date Range"]
 
-const columns: TableColumn<User>[] = [
-  { key: "id", header: "User ID" },
-  { key: "name", header: "Name" },
-  { key: "email", header: "Email" },
-  { key: "role", header: "Role" },
-  { key: "status", header: "Status" },
-  { key: "date", header: "Date Created" },
-]
 
 export default function UserManagementPage() {
   const [activeTab, setActiveTab] = useState("all users")
   const { theme } = useTheme()
-  const { users, stats } = useUsers()
+  const { users, stats, isLoading, isError, deleteUser } = useUsers()
+  
+  const columns: TableColumn<User>[] = [
+    { key: "id", header: "User ID" },
+    { key: "name", header: "Name" },
+    { key: "email", header: "Email" },
+    { key: "role", header: "Role" },
+    { key: "status", header: "Status" },
+    { key: "date", header: "Date Created" },
+    {
+      key: "actions" as const,
+      header: "Actions",
+      render: (user: User) => (
+        <Button
+          size="sm"
+          variant="destructive"
+          onClick={() => deleteUser(user.id)}
+        >
+          Delete
+        </Button>
+      ),
+    },
+  ]
 
   const cardBg = theme === "dark" ? "bg-transparent lg:bg-[#0F2A48]" : "bg-transparent lg:bg-white"
 
@@ -41,6 +55,7 @@ export default function UserManagementPage() {
     { title: "Pending Users", value: stats.pending },
   ]
 
+  // فقط اینو اضافه کردم: action برای موبایل
   const mobileListItems = users.map((u) => ({
     id: u.id,
     title: u.name,
@@ -48,13 +63,21 @@ export default function UserManagementPage() {
     meta: [u.role, u.date],
     createdBy: u.role,
     status: u.status,
+    action: () => (
+      <Button
+        size="sm"
+        variant="destructive"
+        onClick={() => deleteUser(u.id)}
+      >
+        Delete
+      </Button>
+    ),
   }))
 
   return (
     <DashboardLayout title="Users Management" wave={true}>
       <MobileSearchBar />
 
-      {/* Desktop Stats Cards */}
       <div className="hidden lg:grid mb-8 mx-20 grid-cols-1 md:grid-cols-4 gap-4 mt-6">
         {statsItems.map((s) => (
           <StatsCard key={s.title} title={s.title} value={s.value} />
@@ -64,7 +87,6 @@ export default function UserManagementPage() {
       <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-8">
         <Card className={`${cardBg} border-0 shadow-md`}>
           <div className="md:mx-10 mx-4 md:space-y-8 space-y-6 py-6 md:py-0">
-            {/* Mobile Stats Grid */}
             <div className="lg:hidden grid grid-cols-2 gap-3 mb-6">
               {statsItems.map((s) => (
                 <StatsCard key={s.title} title={s.title} value={s.value} variant="compact" />
@@ -83,7 +105,6 @@ export default function UserManagementPage() {
               </div>
             </div>
 
-            {/* Desktop Header Section */}
             <div className="hidden lg:block">
               <div className="flex items-center justify-between w-full">
                 <h1
@@ -107,12 +128,10 @@ export default function UserManagementPage() {
             <TabNavigation tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
             <FilterButtons filters={filters} />
 
-            {/* Desktop Table */}
             <div className="hidden md:block">
               <DataTable data={users} columns={columns} />
             </div>
 
-            {/* Mobile List View */}
             <MobileListView items={mobileListItems} />
           </div>
         </Card>

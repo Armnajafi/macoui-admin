@@ -12,6 +12,7 @@ import { MobileListView } from "@/components/common/mobile-list-view"
 import { useTheme } from "@/contexts/theme-context"
 import { useProjects } from "@/hooks/use-projects"
 import type { Project } from "@/hooks/use-projects"
+import Link from "next/link"
 
 const formatDate = (dateString: string) =>
   new Date(dateString).toLocaleDateString("en-US", {
@@ -20,54 +21,61 @@ const formatDate = (dateString: string) =>
     year: "numeric",
   })
 
-const columns = [
-  {
-    key: "id" as const,
-    header: "Project ID",
-    render: (p: Project) => `#${p.id}`,
-  },
-  {
-    key: "title" as const,
-    header: "Project Title",
-    render: (p: Project) => <div className="font-medium">{p.title}</div>,
-  },
-  {
-    key: "country" as const,
-    header: "Country",
-    render: (p: Project) => p.country?.name ?? "-",
-  },
-  {
-    key: "created_by" as const,
-    header: "Created By",
-    render: (p: Project) => p.created_by.split("@")[0],
-  },
-  {
-    key: "status" as const,
-    header: "Status",
-    render: (p: Project) => {
-      const map: Record<string, string> = {
-        Published: "bg-green-100 text-green-800",
-        Draft: "bg-yellow-100 text-yellow-800",
-        Pending: "bg-orange-100 text-orange-800",
-      }
-      const style = map[p.status] ?? "bg-gray-100 text-gray-800"
-      return (
-        <span className={`px-3 py-1 rounded-full text-xs font-medium ${style}`}>
-          {p.status}
-        </span>
-      )
-    },
-  },
-  {
-    key: "created_at" as const,
-    header: "Date Created",
-    render: (p: Project) => formatDate(p.created_at),
-  },
-]
-
 export default function ProjectManagementPage() {
   const { theme } = useTheme()
-  const { projects, stats, count, isLoading, isError } = useProjects()
+  const { projects, stats, count, isLoading, isError, deleteProject } = useProjects()
+
+  const handleDelete = (project: Project) => {
+    if (confirm(`Are you sure you want to delete "${project.title}"?`)) {
+      deleteProject(project.id)
+    }
+  }
+
+  const columns = [
+    {
+      key: "id" as const,
+      header: "Project ID",
+      render: (p: Project) => `#${p.id}`,
+    },
+    {
+      key: "title" as const,
+      header: "Project Title",
+      render: (p: Project) => <div className="font-medium">{p.title}</div>,
+    },
+    {
+      key: "country" as const,
+      header: "Country",
+      render: (p: Project) => p.country?.name ?? "-",
+    },
+    {
+      key: "created_by" as const,
+      header: "Created By",
+      render: (p: Project) => p.created_by.split("@")[0],
+    },
+    {
+      key: "status" as const,
+      header: "Status",
+      render: (p: Project) => {
+        const map: Record<string, string> = {
+          Published: "bg-green-100 text-green-800",
+          Draft: "bg-yellow-100 text-yellow-800",
+          Pending: "bg-orange-100 text-orange-800",
+        }
+        const style = map[p.status] ?? "bg-gray-100 text-gray-800"
+        return (
+          <span className={`px-3 py-1 rounded-full text-xs font-medium ${style}`}>
+            {p.status}
+          </span>
+        )
+      },
+    },
+    {
+      key: "created_at" as const,
+      header: "Date Created",
+      render: (p: Project) => formatDate(p.created_at),
+    },
+    // ستون Actions رو حذف کردیم چون در DataTable ساخته میشه
+  ]
 
   const cardBg =
     theme === "dark" ? "bg-transparent lg:bg-[#0F2A48]" : "bg-transparent lg:bg-white"
@@ -111,15 +119,17 @@ export default function ProjectManagementPage() {
       <div className="grid grid-cols-1 gap-6 mb-8">
         {/* Desktop Add Button */}
         <div className="hidden lg:flex justify-end relative z-10">
-          <Button
+          <Button asChild
             className={`text-lg rounded-lg font-medium shadow-md px-8 py-6 ${
               theme === "dark"
                 ? "bg-[#0F2A48] hover:bg-[#34495E] text-white"
                 : "bg-blue-600 hover:bg-blue-700 text-white"
             }`}
           >
-            <Plus className="h-6 w-6 mr-2" />
-            Add Project
+            <Link href="/projects/add" className="flex items-center">
+              <Plus className="h-6 w-6 mr-2" />
+              Add Project
+            </Link>
           </Button>
         </div>
 
@@ -131,15 +141,17 @@ export default function ProjectManagementPage() {
               <StatsCard title="Published" value={stats.published} variant="compact" />
               <StatsCard title="Draft" value={stats.draft} variant="compact" />
               <div className="flex items-center justify-center h-24">
-                <Button
+                <Button asChild
                   className={`text-md rounded-lg font-medium shadow-md px-6 py-5 ${
                     theme === "dark"
                       ? "bg-[#0F2A48] hover:bg-[#34495E] text-white"
                       : "bg-blue-600 hover:bg-blue-700 text-white"
                   }`}
                 >
-                  <Plus className="h-5 w-5 mr-2" />
-                  Add Project
+                  <Link href="/projects/add" className="flex items-center">
+                    <Plus className="h-5 w-5 mr-2" />
+                    Add Project
+                  </Link>
                 </Button>
               </div>
             </div>
@@ -164,12 +176,28 @@ export default function ProjectManagementPage() {
 
             {/* Desktop Table */}
             <div className="hidden md:block overflow-x-auto">
-              <DataTable data={projects} columns={columns} />
+              <DataTable 
+                data={projects} 
+                columns={columns} 
+                editRoute="/projects/edit"
+                onDelete={handleDelete}
+              />
             </div>
 
             {/* Mobile List */}
             <div className="md:hidden">
-              <MobileListView items={mobileListItems} />
+              <MobileListView 
+                items={mobileListItems} 
+                onDelete={(item) => {
+                  const project = projects.find(p => p.id === item.id)
+                  if (project) {
+                    if (confirm(`Are you sure you want to delete "${project.title}"?`)) {
+                      deleteProject(project.id)
+                    }
+                  }
+                }}
+                editRoute="/projects/edit"
+              />
             </div>
           </div>
         </Card>

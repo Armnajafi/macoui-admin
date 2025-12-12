@@ -22,7 +22,7 @@ const filters = ["Category", "Author", "Date Range"]
 export default function ArticleManagementPage() {
   const [activeTab, setActiveTab] = useState("all articles")
   const { theme } = useTheme()
-  const { articles, stats } = useArticles()
+  const { articles, stats , deleteArticle } = useArticles()
 
   const cardBg = theme === "dark" ? "bg-transparent lg:bg-[#0F2A48]" : "bg-transparent lg:bg-white"
 
@@ -188,11 +188,18 @@ export default function ArticleManagementPage() {
                             {article.date}
                           </td>
                           <td className="px-6 py-5 text-right">
-                            <button
-                              className={`hover:opacity-75 ${theme === "dark" ? "text-white" : "text-slate-600"}`}
-                            >
-                              <MoreVertical className="w-5 h-5" />
-                            </button>
+                            <div className="flex items-center justify-end gap-3">
+                              <button className={`hover:opacity-75 ${theme === "dark" ? "text-white" : "text-slate-600"}`}>
+                                {/* <MoreVertical className="w-5 h-5" /> */}
+                              </button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => deleteArticle(article.id)}
+                              >
+                                Delete
+                              </Button>
+                            </div>
                           </td>
                         </tr>
                       ))}

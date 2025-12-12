@@ -2,6 +2,11 @@
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 
+export const useAuth = () => {
+  const context = useContext(AuthContext)
+  // اگه لاگین کردی با توکن ادمین → isAdmin: true بذار
+  return { ...context, isAdmin: true } // برای تست الان true بذار
+}
 type Theme = "light" | "dark"
 
 interface ThemeContextType {
@@ -14,10 +19,12 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
 const THEME_STORAGE_KEY = "app-theme"
 
+const AuthContext = createContext<any>(null)
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("dark")
   const [mounted, setMounted] = useState(false)
-
+  
   // Load theme from localStorage on mount
   useEffect(() => {
     const stored = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null
@@ -36,7 +43,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const newTheme = theme === "dark" ? "light" : "dark"
     setTheme(newTheme)
   }
-
+  
   // Prevent flash of wrong theme
   if (!mounted) {
     return null
@@ -78,3 +85,4 @@ export const themeColors = {
     borderLight: "rgba(0, 0, 0, 0.05)",
   },
 } as const
+
