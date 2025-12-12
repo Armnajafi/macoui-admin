@@ -28,7 +28,7 @@ jobs:
             cd /var/www/macoui-admin || exit 0
             git fetch --all
             git reset --hard origin/main
-            cd ~
+            cd ~/marian_plateform
             docker compose down admin_frontend &&
             docker compose build --no-cache admin_frontend &&
             docker compose up -d admin_frontends
