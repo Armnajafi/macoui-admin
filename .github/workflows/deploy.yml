@@ -28,7 +28,6 @@ jobs:
             cd /var/www/macoui-admin || exit 0
             git fetch --all
             git reset --hard origin/main
-            docker build -t myapp:latest .
-            docker compose pull || true
-            docker compose down
-            docker compose up -d --build
+            docker compose down admin_frontend &&
+            docker compose build --no-cache admin_frontend &&
+            docker compose up -d admin_frontends
