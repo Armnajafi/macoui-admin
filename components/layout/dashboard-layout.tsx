@@ -135,9 +135,9 @@ export default function DashboardLayout({ children, title = "Dashboard", wave = 
       width="2000"
       height="400"
       filterUnits="userSpaceOnUse"
-      color-interpolation-filters="sRGB"
+      colorInterpolationFilters="sRGB"
     >
-      <feFlood flood-opacity="0" result="BackgroundImageFix" />
+      <feFlood floodOpacity="0" result="BackgroundImageFix" />
       <feBlend in="SourceGraphic" in2="BackgroundImageFix" mode="normal" />
       <feGaussianBlur stdDeviation="12" />
     </filter>
@@ -150,8 +150,8 @@ export default function DashboardLayout({ children, title = "Dashboard", wave = 
       y2="-245.651"
       gradientUnits="userSpaceOnUse"
     >
-      <stop offset="0.45" stop-color="#AACEFF" stop-opacity="0.9" />
-      <stop offset="1" stop-color="white" stop-opacity="0" />
+      <stop offset="0.45" stopColor="#AACEFF" stopOpacity="0.9" />
+      <stop offset="1" stopColor="white" stopOpacity="0" />
     </linearGradient>
   </defs>
 </svg>
@@ -185,9 +185,9 @@ export default function DashboardLayout({ children, title = "Dashboard", wave = 
       width="2000"
       height="400"
       filterUnits="userSpaceOnUse"
-      color-interpolation-filters="sRGB"
+      colorInterpolationFilters="sRGB"
     >
-      <feFlood flood-opacity="0" result="BackgroundImageFix" />
+      <feFlood floodOpacity="0" result="BackgroundImageFix" />
       <feBlend in="SourceGraphic" in2="BackgroundImageFix" mode="normal" />
       <feGaussianBlur stdDeviation="12" />
     </filter>
@@ -200,8 +200,8 @@ export default function DashboardLayout({ children, title = "Dashboard", wave = 
       y2="-148.253"
       gradientUnits="userSpaceOnUse"
     >
-      <stop stop-color="#016BFF" stop-opacity="0.9" />
-      <stop offset="1" stop-opacity="0" />
+      <stop stopColor="#016BFF" stopOpacity="0.9" />
+      <stop offset="1" stopOpacity="0" />
     </linearGradient>
   </defs>
 </svg>
@@ -325,9 +325,9 @@ export default function DashboardLayout({ children, title = "Dashboard", wave = 
       width="1699.25"
       height="357.752"
       filterUnits="userSpaceOnUse"
-      color-interpolation-filters="sRGB"
+      colorInterpolationFilters="sRGB"
     >
-      <feFlood flood-opacity="0" result="BackgroundImageFix" />
+      <feFlood floodOpacity="0" result="BackgroundImageFix" />
       <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
       <feGaussianBlur stdDeviation="10" result="effect1_foregroundBlur" />
     </filter>
@@ -340,8 +340,8 @@ export default function DashboardLayout({ children, title = "Dashboard", wave = 
       y2="611.484"
       gradientUnits="userSpaceOnUse"
     >
-      <stop offset="0.45" stop-color="#AACEFF" stop-opacity="0.9" />
-      <stop offset="1" stop-color="white" stop-opacity="0" />
+      <stop offset="0.45" stopColor="#AACEFF" stopOpacity="0.9" />
+      <stop offset="1" stopColor="white" stopOpacity="0" />
     </linearGradient>
   </defs>
 </svg>
@@ -378,9 +378,9 @@ export default function DashboardLayout({ children, title = "Dashboard", wave = 
       width="1699.25"
       height="357.752"
       filterUnits="userSpaceOnUse"
-      color-interpolation-filters="sRGB"
+      colorInterpolationFilters="sRGB"
     >
-      <feFlood flood-opacity="0" result="BackgroundImageFix" />
+      <feFlood floodOpacity="0" result="BackgroundImageFix" />
       <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
       <feGaussianBlur stdDeviation="10" result="effect1_foregroundBlur" />
     </filter>
@@ -393,8 +393,8 @@ export default function DashboardLayout({ children, title = "Dashboard", wave = 
       y2="591.484"
       gradientUnits="userSpaceOnUse"
     >
-      <stop stop-color="#016BFF" stop-opacity="0.8" />
-      <stop offset="1" stop-opacity="0" />
+      <stop stopColor="#016BFF" stopOpacity="0.8" />
+      <stop offset="1" stopOpacity="0" />
     </linearGradient>
   </defs>
 </svg>
