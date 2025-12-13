@@ -39,7 +39,7 @@ export default function LoginPage() {
 
       // ذخیره توکن در localStorage
       localStorage.setItem("auth-token", data.access);
-
+      document.cookie = `auth-token=${data.access}; path=/; secure; samesite=lax`;
       // برو به داشبورد
       router.push("/");
     } catch (err: any) {
