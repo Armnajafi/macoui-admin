@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 "use client";
 
 import useSWR, { mutate } from "swr";
@@ -236,10 +237,249 @@ export function useDocuments() {
     documents,
     stats,
     count: data?.count ?? mockStats.total,
+=======
+// hooks/useDocuments.ts
+"use client"
+
+import useSWR from "swr"
+import { swrFetcher, api } from "@/lib/api"
+import type { Document } from "@/lib/types"
+
+export interface ApiDocument {
+  id: number
+  title: string
+  activity: string
+  type: string
+  file: string | null
+  url: string | null
+  uploaded_by: string
+  status: "active" | "archive"
+  created_at: string
+  updated_at: string
+}
+
+const isFile = (value: any): value is File => {
+  return typeof File !== "undefined" && value instanceof File
+}
+
+interface DocumentsApiResponse {
+  count: number
+  next: string | null
+  previous: string | null
+  results: ApiDocument[]
+}
+
+// Mock data (سازگار با API واقعی)
+const mockApiDocuments: ApiDocument[] = [
+  {
+    id: 1,
+    title: "Ship Inspection Report",
+    activity: "ship_finance",
+    type: "PDF",
+    file: "http://example.com/ship-inspection.pdf",
+    url: null,
+    uploaded_by: "h.smith@broker.com",
+    status: "active",
+    created_at: "2025-01-19T00:00:00Z",
+    updated_at: "2025-01-19T00:00:00Z",
+  },
+  {
+    id: 2,
+    title: "Tanker Safety Guidelines",
+    activity: "trading",
+    type: "DOCX",
+    file: null,
+    url: "https://example.com/safety-guidelines.docx",
+    uploaded_by: "j.doe@broker.com",
+    status: "active",
+    created_at: "2025-01-17T00:00:00Z",
+    updated_at: "2025-01-17T00:00:00Z",
+  },
+]
+
+const mockResponse: DocumentsApiResponse = {
+  count: 123,
+  next: null,
+  previous: null,
+  results: mockApiDocuments,
+}
+
+const API_URL = "/api/management/core/documents/"
+
+interface UseDocumentsOptions {
+  activity?: string
+  type?: string
+  status?: "active" | "archive"
+  title?: string
+  page?: number
+  page_size?: number
+}
+
+const transformToDocument = (apiDoc: ApiDocument): Document => ({
+  id: apiDoc.id.toString(),
+  title: apiDoc.title,
+  category: apiDoc.activity.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()), // e.g., ship_finance → Ship Finance
+  author: apiDoc.uploaded_by,
+  status: apiDoc.status === "active" ? "Approved" : "Archive",
+  date: new Date(apiDoc.created_at).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  })
+})
+
+export function useDocuments(options: UseDocumentsOptions = {}) {
+  const {
+    activity,
+    type,
+    status,
+    title,
+    page = 1,
+    page_size = 10,
+  } = options
+
+  // ساخت query string
+  const queryParams = new URLSearchParams()
+  if (activity) queryParams.append("activity", activity)
+  if (type) queryParams.append("type", type)
+  if (status) queryParams.append("status", status)
+  if (title) queryParams.append("title", title)
+  queryParams.append("page", page.toString())
+  queryParams.append("page_size", page_size.toString())
+
+  const queryString = queryParams.toString()
+  const url = queryString ? `${API_URL}?${queryString}` : API_URL
+
+  const { data, error, isLoading, mutate } = useSWR<DocumentsApiResponse>(
+    url,
+    swrFetcher,
+    {
+      fallbackData: mockResponse,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: true,
+    }
+  )
+
+  // تابع ایجاد سند جدید
+  const createDocument = async (payload: {
+    title: string
+    activity: string
+    type: string
+    file?: File
+    url?: string
+    status: "active" | "archive"
+  }) => {
+    try {
+      const formData = new FormData()
+      formData.append("title", payload.title)
+      formData.append("activity", payload.activity)
+      formData.append("type", payload.type)
+      formData.append("status", payload.status)
+
+      if (payload.file) {
+        formData.append("file", payload.file)
+      } else if (payload.url) {
+        formData.append("url", payload.url)
+      }
+
+      console.log("📤 Sending to API (create document):", Object.fromEntries(formData))
+
+      const response = await api.post(API_URL, formData)
+
+      await mutate()
+
+      return {
+        success: true,
+        data: response.data,
+        message: "سند با موفقیت ایجاد شد ✅"
+      }
+    } catch (err: any) {
+      console.error("Error creating document:", err)
+
+      let errorMessage = "ایجاد سند ناموفق بود! 😔"
+      if (err.response?.data) {
+        const errorData = err.response.data
+        if (typeof errorData === 'object') {
+          Object.keys(errorData).forEach(key => {
+            errorMessage += `\n${key}: ${Array.isArray(errorData[key]) ? errorData[key].join(', ') : errorData[key]}`
+          })
+        }
+      }
+
+      return {
+        success: false,
+        error: err,
+        message: errorMessage
+      }
+    }
+  }
+
+  // تابع حذف سند
+  const deleteDocument = async (id: number) => {
+    if (!confirm("مطمئنی می‌خوای این سند رو حذف کنی؟")) return
+
+    try {
+      await api.delete(`${API_URL}${id}/`)
+      mutate()
+      alert("سند با موفقیت حذف شد ✅")
+    } catch (err) {
+      console.error(err)
+      alert("حذف نشد! یه مشکلی پیش اومد 😔")
+    }
+  }
+// یک type guard ساده بساز
+const isFile = (value: any): value is File => {
+  return typeof File !== "undefined" && value instanceof File
+}
+
+const editDocument = async (
+  id: number,
+  payload: Partial<ApiDocument> & { file?: File | null; url?: string | null }
+) => {
+  if (!confirm("مطمئنی می‌خوای این سند رو ویرایش کنی؟")) return
+
+  try {
+    const formData = new FormData()
+
+    Object.entries(payload).forEach(([key, value]) => {
+      if (value === null || value === undefined) return
+
+      if (isFile(value)) {
+        formData.append(key, value)
+      } else {
+        formData.append(key, String(value))
+      }
+    })
+
+    await api.patch(`${API_URL}${id}/`, formData)
+    await mutate()
+    alert("سند با موفقیت ویرایش شد")
+  } catch (err: any) {
+    console.error(err)
+    alert("مشکلی در ویرایش سند پیش آمد!")
+  }
+}
+
+  // داده‌های تبدیل‌شده برای UI
+  const documents = data?.results.map(transformToDocument) ?? mockResponse.results.map(transformToDocument)
+  const total = data?.count ?? mockResponse.count
+
+  const stats = {
+    total,
+    approved: documents.filter(d => d.status === "Approved").length,
+    archive: documents.filter(d => d.status === "Archive").length,
+  }
+
+  return {
+    documents,
+    stats,
+    count: total,
+>>>>>>> b1439ef (broker)
     nextPage: data?.next ?? null,
     previousPage: data?.previous ?? null,
     isLoading,
     isError: !!error,
+<<<<<<< HEAD
     error,
 
     // CRUD methods
@@ -249,4 +489,12 @@ export function useDocuments() {
 
     mutate: () => mutate(API_URL),
   };
+=======
+    createDocument,
+    deleteDocument,
+    editDocument,
+    error,
+    mutate,
+  }
+>>>>>>> b1439ef (broker)
 }

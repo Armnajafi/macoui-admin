@@ -10,10 +10,11 @@ export interface Broker {
   company: string
   location: string
   status: "Approved" | "Pending" | "Rejected"
-  date: string
+  date: string // یا created_at که فرمت می‌شه
   email?: string
   phone?: string
   notes?: string
+  admin_note?: string
 }
 
 interface BrokersResponse {
@@ -25,18 +26,26 @@ interface BrokersResponse {
 
 const API_URL = "/api/brokerage/admin/ships/"
 
+const formatDate = (dateString: string) =>
+  new Date(dateString).toLocaleDateString("fa-IR", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  })
+
+// فقط برای fallback در توسعه
 const mockBrokers: Broker[] = [
-  { id: "BRK-4532", name: "John Smith", company: "Maritime Corp", location: "London", status: "Approved", date: "Jan 19, 2024" },
-  { id: "BRK-5283", name: "Sarah Johnson", company: "Ocean Trade Ltd", location: "Sydney", status: "Pending", date: "Jan 17, 2024" },
-  { id: "BRK-8523", name: "Michael Chen", company: "Pacific Shipping", location: "New York", status: "Approved", date: "Jan 12, 2024" },
-  { id: "BRK-2142", name: "Emma Wilson", company: "Atlantic Brokers", location: "Singapore", status: "Rejected", date: "Jan 11, 2024", notes: "مدارک ناقص" },
+  { id: 1, name: "جان اسمیت", company: "ماریتایم کورپ", location: "لندن", status: "Approved", date: "2024-01-19", notes: "" },
+  { id: 2, name: "سارا جانسون", company: "اوشن ترید", location: "سیدنی", status: "Pending", date: "2024-01-17" },
+  { id: 3, name: "مایکل چن", company: "پاسیفیک شیپینگ", location: "نیویورک", status: "Approved", date: "2024-01-12" },
+  { id: 4, name: "اما ویلسون", company: "آتلانتیک بروکرز", location: "سنگاپور", status: "Rejected", date: "2024-01-11", admin_note: "مدارک ناقص" },
 ]
 
 const mockResponse: BrokersResponse = {
   count: 123,
   next: null,
   previous: null,
-  results: mockBrokers
+  results: mockBrokers,
 }
 
 export function useBrokers() {
@@ -55,21 +64,25 @@ export function useBrokers() {
   }
 
   const deleteBroker = async (id: number | string) => {
-    if (!confirm("مطمئنی می‌خوای حذف کنی؟")) return
+    if (!confirm("آیا از حذف این بروکر مطمئن هستید؟")) return
     try {
       await api.delete(`${API_URL}${id}/`)
       mutate()
     } catch (err) {
-      alert("حذف ناموفق بود")
+      alert("حذف با خطا مواجه شد")
     }
   }
 
-  const updateBrokerStatus = async (id: number | string, status: Broker["status"], admin_note?: string) => {
+  const updateBrokerStatus = async (
+    id: number | string,
+    status: Broker["status"],
+    admin_note?: string
+  ) => {
     try {
       await api.patch(`${API_URL}${id}/`, { status, admin_note })
       mutate()
     } catch (err) {
-      alert("تغییر وضعیت ناموفق بود")
+      alert("تغییر وضعیت با خطا مواجه شد")
       throw err
     }
   }
@@ -80,8 +93,8 @@ export function useBrokers() {
     total,
     isLoading,
     isError: !!error,
-    mutate,
     deleteBroker,
     updateBrokerStatus,
+    mutate,
   }
 }
