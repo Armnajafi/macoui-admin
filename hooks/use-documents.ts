@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 "use client";
 
 import useSWR, { mutate } from "swr";
