@@ -6,6 +6,7 @@ WORKDIR /app
 # 1. Stage: نصب وابستگی‌ها
 FROM base AS deps
 COPY package*.json ./
+RUN npm i
 RUN npm ci
 
 # 2. Stage: ساخت پروژه
