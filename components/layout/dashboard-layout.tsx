@@ -209,10 +209,10 @@ export default function DashboardLayout({ children, title = "Dashboard", wave = 
         </div>
       )}
 
-      <div className="flex flex-1 relative">
+      <div className="flex flex-1 relative overflow-auto">
         {/* Desktop Sidebar */}
         <aside
-          className={`hidden lg:flex fixed left-0 top-0 bottom-0 w-30 flex-col items-center py-4 space-y-12 z-50 shadow-2xl rounded-tr-3xl ${
+          className={`hidden lg:flex overflow-auto fixed left-0 top-0 bottom-0 w-30 flex-col items-center py-4 space-y-12 z-50 shadow-2xl rounded-tr-3xl ${
             theme === "dark" ? "bg-[#0F2A48]" : "bg-white border-r border-gray-200"
           }`}
         >
@@ -262,7 +262,7 @@ export default function DashboardLayout({ children, title = "Dashboard", wave = 
                 />
               </svg>
             </div>
-            <nav className="flex-1 px-8 py-10">
+            <nav className="flex-1 px-8 py-10 overflow-auto">
               {menuItems.map((item) => (
                 <Link
                   key={item.href}
