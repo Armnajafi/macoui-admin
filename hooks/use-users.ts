@@ -102,14 +102,11 @@ export function useUsers() {
     try {
       const response = await api.post(API_URL, payload);
       await mutate(API_URL);
-      return { success: true, data: response.data };
+      // اگر response.error === null یعنی موفق بوده (status 200)
+      return response.error === null;
     } catch (err: any) {
       console.error("Create user failed:", err);
-      const msg = err.response?.data?.email?.[0] ||
-                  err.response?.data?.password?.[0] ||
-                  err.response?.data?.detail ||
-                  "Failed to create user";
-      return { success: false, message: msg };
+      return false;
     }
   };
 

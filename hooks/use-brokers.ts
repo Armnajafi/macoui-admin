@@ -5,16 +5,38 @@ import useSWR from "swr"
 import { swrFetcher, api } from "@/lib/api"
 
 export interface Broker {
-  id: number | string
+  id: number
   name: string
+  slug: string
+  ship_type: string
+  ship_type_display: string
+  description: string
+  capacity_dwt: number
+  capacity_gt: number
+  length: string
+  width: string
+  draft: string
+  year_built: number
+  price: string
+  currency: string
+  location_country: number
+  location_country_name: string
+  location_port: string
+  status: string
+  status_display: string
+  is_featured: boolean
+  is_active: boolean
+  cover_image: string | null
+  cover_image_url: string | null
+  seller: number
+  seller_name: string
+  visit_requests_count: number
+  created_at: string
+  updated_at: string
+  // فیلدهای محاسبه شده برای سازگاری با UI قدیمی
   company: string
   location: string
-  status: "Approved" | "Pending" | "Rejected"
-  date: string // یا created_at که فرمت می‌شه
-  email?: string
-  phone?: string
-  notes?: string
-  admin_note?: string
+  date: string
 }
 
 interface BrokersResponse {
@@ -50,17 +72,26 @@ const mockResponse: BrokersResponse = {
 
 export function useBrokers() {
   const { data, error, isLoading, mutate } = useSWR<BrokersResponse>(API_URL, swrFetcher, {
-    fallbackData: mockResponse,
+    revalidateOnFocus: false,
+    revalidateOnReconnect: true,
   })
 
-  const brokers = data?.results ?? []
-  const total = data?.count ?? brokers.length
+  // تبدیل داده‌های API به فرمت مورد انتظار UI
+  const brokers = data?.results.map(ship => ({
+    ...ship,
+    // فیلدهای محاسبه شده برای سازگاری با UI قدیمی
+    company: ship.seller_name,
+    location: ship.location_port,
+    date: formatDate(ship.created_at),
+  })) ?? []
+
+  const total = data?.count ?? 0
 
   const stats = {
     total,
-    pending: brokers.filter(b => b.status === "Pending").length,
-    approved: brokers.filter(b => b.status === "Approved").length,
-    rejected: brokers.filter(b => b.status === "Rejected").length,
+    pending: brokers.filter(b => b.status === "for_sale").length,
+    approved: brokers.filter(b => b.status === "sold").length,
+    rejected: brokers.filter(b => !b.is_active).length,
   }
 
   const deleteBroker = async (id: number | string) => {

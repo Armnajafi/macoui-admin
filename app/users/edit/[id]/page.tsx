@@ -17,6 +17,7 @@ import {
 import { ChevronLeft, ChevronRight, Save, Loader2, UserPlus } from "lucide-react";
 import Footer from "@/components/ui/footer-admin";
 import { useUsers } from "@/hooks/use-users";
+import { useCountries } from "@/hooks/use-countries";
 
 const steps = [
   { id: 1, name: "Account Information" },
@@ -28,6 +29,7 @@ export default function EditUserPage() {
   const router = useRouter();
   const { id } = useParams();
   const { users, updateUser, isLoading: isHookLoading } = useUsers();
+  const { countries, isLoading: countriesLoading } = useCountries();
 
   const user = users.find(u => u.id === id);
 
@@ -234,15 +236,17 @@ export default function EditUserPage() {
                     <Select
                       value={formData.country}
                       onValueChange={(value) => handleInputChange("country", value)}
+                      disabled={countriesLoading}
                     >
                       <SelectTrigger className="mt-2 h-12">
-                        <SelectValue placeholder="Select country" />
+                        <SelectValue placeholder={countriesLoading ? "Loading countries..." : "Select country"} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="104">Iran</SelectItem>
-                        <SelectItem value="1">United States</SelectItem>
-                        <SelectItem value="44">United Kingdom</SelectItem>
-                        <SelectItem value="65">Singapore</SelectItem>
+                        {countries.map((country) => (
+                          <SelectItem key={country.id} value={String(country.id)}>
+                            {country.name} ({country.code})
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>

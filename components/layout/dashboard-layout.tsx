@@ -31,7 +31,7 @@ interface DashboardLayoutProps {
 
 const menuItems = [
   { icon: Home, label: "Dashboard", href: "/" },
-  { icon: FolderOpen, label: "Projects", href: "/projects" },
+  { icon: FolderOpen, label: "Finance", href: "/finance" },
   { icon: Briefcase, label: "Brokers", href: "/brokers" },
   { icon: Users, label: "Users", href: "/users" },
   { icon: Newspaper, label: "Articles", href: "/articles" },

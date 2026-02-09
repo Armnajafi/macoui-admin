@@ -22,7 +22,7 @@ interface MobileListViewProps {
   editRoute?: string
 }
 
-export function MobileListView({ items, onEdit, onDelete, editRoute = "/projects/edit" }: MobileListViewProps) {
+export function MobileListView({ items, onEdit, onDelete, editRoute = "/brokers/edit" }: MobileListViewProps) {
   const { theme } = useTheme()
   const router = useRouter()
   const [openMenuId, setOpenMenuId] = useState<string | number | null>(null)

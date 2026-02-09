@@ -10,8 +10,8 @@ import { StatsCard } from "@/components/common/stats-card"
 import { DataTable } from "@/components/common/data-table"
 import { MobileListView } from "@/components/common/mobile-list-view"
 import { useTheme } from "@/contexts/theme-context"
-import { useProjects } from "@/hooks/use-projects"
-import type { Project } from "@/hooks/use-projects"
+import { useFinanceProjects } from "@/hooks/use-finance-projects"
+import type { FinanceProject } from "@/hooks/use-finance-projects"
 import Link from "next/link"
 
 const formatDate = (dateString: string) =>
@@ -23,9 +23,9 @@ const formatDate = (dateString: string) =>
 
 export default function ProjectManagementPage() {
   const { theme } = useTheme()
-  const { projects, stats, count, isLoading, isError, deleteProject } = useProjects()
+  const { projects, stats, count, isLoading, isError, deleteProject } = useFinanceProjects()
 
-  const handleDelete = (project: Project) => {
+  const handleDelete = (project: FinanceProject) => {
     if (confirm(`Are you sure you want to delete "${project.title}"?`)) {
       deleteProject(project.id)
     }
@@ -35,36 +35,41 @@ export default function ProjectManagementPage() {
     {
       key: "id" as const,
       header: "Project ID",
-      render: (p: Project) => `#${p.id}`,
+      render: (p: FinanceProject) => `#${p.id}`,
     },
     {
       key: "title" as const,
       header: "Project Title",
-      render: (p: Project) => <div className="font-medium">{p.title}</div>,
+      render: (p: FinanceProject) => <div className="font-medium">{p.title}</div>,
     },
     {
       key: "country" as const,
       header: "Country",
-      render: (p: Project) => p.country?.name ?? "-",
+      render: (p: FinanceProject) => p.country?.name ?? "-",
     },
     {
       key: "created_by" as const,
       header: "Created By",
-      render: (p: Project) => p.created_by.split("@")[0],
+      render: (p: FinanceProject) => p.created_by.split("@")[0],
     },
     {
       key: "status" as const,
       header: "Status",
-      render: (p: Project) => {
+      render: (p: FinanceProject) => {
         const map: Record<string, string> = {
-          Published: "bg-green-100 text-green-800",
-          Draft: "bg-yellow-100 text-yellow-800",
-          Pending: "bg-orange-100 text-orange-800",
+          P: "bg-green-100 text-green-800",
+          D: "bg-yellow-100 text-yellow-800",
+          R: "bg-red-100 text-red-800",
+        }
+        const statusText = {
+          P: "Published",
+          D: "Draft",
+          R: "Rejected",
         }
         const style = map[p.status] ?? "bg-gray-100 text-gray-800"
         return (
           <span className={`px-3 py-1 rounded-full text-xs font-medium ${style}`}>
-            {p.status}
+            {statusText[p.status] || p.status}
           </span>
         )
       },
@@ -72,7 +77,7 @@ export default function ProjectManagementPage() {
     {
       key: "created_at" as const,
       header: "Date Created",
-      render: (p: Project) => formatDate(p.created_at),
+      render: (p: FinanceProject) => formatDate(p.created_at),
     },
     // ستون Actions رو حذف کردیم چون در DataTable ساخته میشه
   ]
@@ -84,9 +89,9 @@ export default function ProjectManagementPage() {
     id: p.id,
     title: p.title,
     subtitle: p.country?.name ?? "No country",
-    meta: [formatDate(p.created_at), p.status],
+    meta: [formatDate(p.created_at), p.status === "P" ? "Published" : p.status === "D" ? "Draft" : "Rejected"],
     createdBy: p.created_by.split("@")[0],
-    status: p.status,
+    status: p.status === "P" ? "Published" : p.status === "D" ? "Draft" : "Rejected",
     coverImage: p.cover_image
       ? `http://admin.tailwindrose.com${p.cover_image}`
       : null,
@@ -94,9 +99,9 @@ export default function ProjectManagementPage() {
 
   if (isLoading) {
     return (
-      <DashboardLayout title="Project Management" wave={true}>
+      <DashboardLayout title="Finance Management" wave={true}>
         <div className="flex items-center justify-center h-96 text-xl">
-          Loading projects...
+          Loading finance projects...
         </div>
       </DashboardLayout>
     )
@@ -104,16 +109,16 @@ export default function ProjectManagementPage() {
 
   if (isError) {
     return (
-      <DashboardLayout title="Project Management" wave={true}>
+      <DashboardLayout title="Finance Management" wave={true}>
         <div className="flex items-center justify-center h-96 text-red-500">
-          Failed to load projects
+          Failed to load finance
         </div>
       </DashboardLayout>
     )
   }
 
   return (
-    <DashboardLayout title="Project Management" wave={true}>
+    <DashboardLayout title="Finance Management" wave={true}>
       <MobileSearchBar />
 
       <div className="grid grid-cols-1 gap-6 mb-8">
@@ -126,9 +131,9 @@ export default function ProjectManagementPage() {
                 : "bg-blue-600 hover:bg-blue-700 text-white"
             }`}
           >
-            <Link href="/projects/add" className="flex items-center">
+            <Link href="/finance/add" className="flex items-center">
               <Plus className="h-6 w-6 mr-2" />
-              Add Project
+              Add Finance
             </Link>
           </Button>
         </div>
@@ -148,9 +153,9 @@ export default function ProjectManagementPage() {
                       : "bg-blue-600 hover:bg-blue-700 text-white"
                   }`}
                 >
-                  <Link href="/projects/add" className="flex items-center">
+                  <Link href="/finance/add" className="flex items-center">
                     <Plus className="h-5 w-5 mr-2" />
-                    Add Project
+                    Add Finance
                   </Link>
                 </Button>
               </div>
@@ -164,7 +169,7 @@ export default function ProjectManagementPage() {
                     theme === "dark" ? "text-white" : "text-slate-900"
                   }`}
                 >
-                  Project Management
+                  Finance Management
                 </h1>
               </div>
               <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -179,7 +184,7 @@ export default function ProjectManagementPage() {
               <DataTable 
                 data={projects} 
                 columns={columns} 
-                editRoute="/projects/edit"
+                editRoute="/finance/edit"
                 onDelete={handleDelete}
               />
             </div>
@@ -196,7 +201,7 @@ export default function ProjectManagementPage() {
                     }
                   }
                 }}
-                editRoute="/projects/edit"
+                editRoute="/finance/edit"
               />
             </div>
           </div>

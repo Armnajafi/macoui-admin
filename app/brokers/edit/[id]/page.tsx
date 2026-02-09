@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,92 +19,99 @@ import { ChevronLeft, ChevronRight, Save, Loader2 } from "lucide-react";
 import Footer from "@/components/ui/footer-admin";
 import { useBrokers, type Broker } from "@/hooks/use-brokers";
 
-export default function EditBrokerPage() {
+export default function EditShipPage() {
   const router = useRouter();
   const { id } = useParams(); // broker id from URL
-  const { brokers, isLoading: hookLoading } = useBrokers();
+  const { brokers, updateBrokerStatus, isLoading: hookLoading } = useBrokers();
 
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [broker, setBroker] = useState<Broker | null>(null);
+  const [isInitializing, setIsInitializing] = useState(true);
+  const initializedRef = useRef(false);
 
   const [formData, setFormData] = useState({
     name: "",
-    company: "",
-    email: "",
-    phone: "",
-    location: "",
-    country: "",
-    notes: "",
-    status: "Pending" as "Approved" | "Pending" | "Rejected",
-    profile_image: null as string | null,
+    ship_type: "",
+    location_country: "",
+    location_port: "",
+    status: "for_sale" as "for_sale" | "sold",
+    description: "",
   });
 
   const steps = [
-    { id: 1, name: "Personal Info" },
-    { id: 2, name: "Company & Contact" },
-    { id: 3, name: "Additional Details" },
+    { id: 1, name: "Ship Details" },
+    { id: 2, name: "Location & Status" },
+    { id: 3, name: "Additional Info" },
   ];
 
   // Load broker data when component mounts
   useEffect(() => {
-    if (brokers.length > 0 && id) {
+    if (!initializedRef.current && !hookLoading && id && brokers.length > 0) {
+      initializedRef.current = true;
       const foundBroker = brokers.find((b) => b.id.toString() === id.toString());
       if (foundBroker) {
         setBroker(foundBroker);
         setFormData({
           name: foundBroker.name || "",
-          company: foundBroker.company || "",
-          email: foundBroker.email || "",
-          phone: foundBroker.phone || "",
-          location: foundBroker.location || "",
-          country: foundBroker.location || "", // fallback to location if country not separate
-          notes: foundBroker.notes || "",
+          ship_type: foundBroker.ship_type || "",
+          location_country: foundBroker.location_country_name || "",
+          location_port: foundBroker.location_port || "",
           status: foundBroker.status,
-          profile_image: null, // if you have image URL in future, add it here
+          description: foundBroker.description || "",
         });
+        setIsInitializing(false);
       } else {
-        alert("Broker not found");
-        router.push("/dashboard/brokers");
+        alert("Ship not found");
+        router.push("/brokers");
       }
+    } else if (!hookLoading) {
+      setIsInitializing(false);
     }
-  }, [brokers, id, router]);
+  }, [hookLoading, id, brokers, router]);
 
-  const nextStep = () => {
+  const nextStep = useCallback(() => {
     if (currentStep < 3) setCurrentStep(currentStep + 1);
-  };
+  }, [currentStep]);
 
-  const prevStep = () => {
+  const prevStep = useCallback(() => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
-  };
+  }, [currentStep]);
 
-  const handleInputChange = (field: keyof typeof formData, value: any) => {
+  const handleInputChange = useCallback((field: keyof typeof formData, value: any) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
-  };
+  }, []);
 
-  const handleCountryChange = (value: string) => {
-    handleInputChange("country", value);
-    if (!formData.location) {
-      handleInputChange("location", value);
-    }
-  };
 
-  const validateStep1 = () => {
+  const validateStep1 = useCallback(() => {
     if (!formData.name.trim()) {
-      alert("Please enter the broker's full name");
-      return false;
-    }
-    if (!formData.country) {
-      alert("Please select a country");
+      alert("Please enter the ship name");
       return false;
     }
     return true;
-  };
+  }, [formData.name]);
+  const handleSubmit = useCallback(async () => {
+    if (!validateStep1()) return;
 
-  const handleSaveDraft = async () => {
+    setIsLoading(true);
+
+    try {
+      await updateBrokerStatus(id as string, formData.status);
+
+      alert("Ship updated successfully.");
+      router.push("/brokers");
+    } catch (error) {
+      console.error("Error updating ship:", error);
+      alert("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [id, formData.status, updateBrokerStatus, router]);
+  
+  const handleSaveDraft = useCallback(async () => {
     if (currentStep === 1 && !validateStep1()) return;
 
     if (currentStep === 3) {
@@ -112,45 +119,13 @@ export default function EditBrokerPage() {
     } else {
       nextStep();
     }
-  };
+  }, [currentStep, validateStep1, handleSubmit, nextStep]);
 
-  const handleSubmit = async () => {
-    if (!validateStep1()) return;
 
-    setIsLoading(true);
-
-    try {
-      const updatedData = {
-        name: formData.name,
-        company: formData.company || undefined,
-        location: formData.location || formData.country,
-        status: formData.status,
-        email: formData.email || undefined,
-        phone: formData.phone || undefined,
-        notes: formData.notes || undefined,
-      };
-
-      // Assuming updateBroker exists in your hook (PATCH to /api/brokerage/admin/ships/<id>/)
-      // @ts-ignore
-      const result = await updateBroker(id, updatedData);
-
-      if (result?.success !== false) {
-        alert("Broker updated successfully.");
-        router.push("/dashboard/brokers");
-      } else {
-        alert(result?.message || "Failed to update broker.");
-      }
-    } catch (error) {
-      console.error("Error updating broker:", error);
-      alert("An unexpected error occurred. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const progressPercentage = ((currentStep - 1) / (steps.length - 1)) * 100;
 
-  if (hookLoading || !broker) {
+  if (hookLoading || isInitializing || !broker) {
     return (
       <div className="bg-[#f8f8f8] min-h-screen flex items-center justify-center">
         <Loader2 className="w-10 h-10 animate-spin text-[#1A365D]" />
@@ -164,10 +139,10 @@ export default function EditBrokerPage() {
       <div className="w-full bg-[#1A365D] shadow-lg">
         <div className="max-w-[1226px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-[77px]">
           <h2 className="text-xl sm:text-2xl md:text-[44px] font-semibold text-white mb-2">
-            Edit Broker Profile
+            Edit Ship Details
           </h2>
           <p className="text-sm sm:text-xl md:text-[28px] text-white opacity-90">
-            Update broker information and approval status
+            Update ship information and status
           </p>
         </div>
       </div>
@@ -203,20 +178,20 @@ export default function EditBrokerPage() {
 
         {/* Form Card */}
         <div className="bg-white rounded-3xl shadow-lg border border-gray-200 p-8 md:p-12">
-          {/* Step 1: Personal Info */}
+          {/* Step 1: Ship Details */}
           {currentStep === 1 && (
             <div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-10">Personal Information</h3>
+              <h3 className="text-2xl font-bold text-gray-800 mb-10">Ship Information</h3>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 <div className="space-y-7">
                   <div>
                     <Label htmlFor="name" className="text-base font-medium">
-                      Full Name *
+                      Ship Name *
                     </Label>
                     <Input
                       id="name"
-                      placeholder="John Smith"
+                      placeholder="Bulk Carrier ABC"
                       className="mt-2 h-12"
                       value={formData.name}
                       onChange={(e) => handleInputChange("name", e.target.value)}
@@ -224,30 +199,67 @@ export default function EditBrokerPage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="country" className="text-base font-medium">
-                      Country *
+                    <Label htmlFor="ship_type" className="text-base font-medium">
+                      Ship Type
                     </Label>
-                    <Select value={formData.country} onValueChange={handleCountryChange}>
-                      <SelectTrigger id="country" className="mt-2 h-12">
-                        <SelectValue placeholder="Select country" />
+                    <Select
+                      value={formData.ship_type}
+                      onValueChange={(value) => handleInputChange("ship_type", value)}
+                    >
+                      <SelectTrigger id="ship_type" className="mt-2 h-12">
+                        <SelectValue placeholder="Select ship type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="United Kingdom">United Kingdom</SelectItem>
-                        <SelectItem value="United States">United States</SelectItem>
-                        <SelectItem value="Singapore">Singapore</SelectItem>
-                        <SelectItem value="Germany">Germany</SelectItem>
-                        <SelectItem value="Netherlands">Netherlands</SelectItem>
-                        <SelectItem value="Australia">Australia</SelectItem>
-                        <SelectItem value="Japan">Japan</SelectItem>
-                        <SelectItem value="China">China</SelectItem>
-                        <SelectItem value="South Korea">South Korea</SelectItem>
+                        <SelectItem value="cargo">Cargo</SelectItem>
+                        <SelectItem value="tanker">Tanker</SelectItem>
+                        <SelectItem value="bulk">Bulk Carrier</SelectItem>
+                        <SelectItem value="container">Container Ship</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
+
+                <div className="space-y-7">
+                  <div>
+                    <Label htmlFor="location_country" className="text-base font-medium">
+                      Country
+                    </Label>
+                    <Input
+                      id="location_country"
+                      placeholder="Iran, Singapore, etc."
+                      className="mt-2 h-12"
+                      value={formData.location_country}
+                      onChange={(e) => handleInputChange("location_country", e.target.value)}
+                    />
+                  </div>
 
                   <div>
+                    <Label htmlFor="location_port" className="text-base font-medium">
+                      Port Location
+                    </Label>
+                    <Input
+                      id="location_port"
+                      placeholder="Bandar Abbas, Singapore, Rotterdam"
+                      className="mt-2 h-12"
+                      value={formData.location_port}
+                      onChange={(e) => handleInputChange("location_port", e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 2: Location & Status */}
+          {currentStep === 2 && (
+            <div>
+              <h3 className="text-2xl font-bold text-gray-800 mb-10">Location & Status</h3>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                <div className="space-y-7">
+                  <div>
                     <Label htmlFor="status" className="text-base font-medium">
-                      Approval Status
+                      Ship Status
                     </Label>
                     <Select
                       value={formData.status}
@@ -257,132 +269,74 @@ export default function EditBrokerPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Approved">Approved</SelectItem>
-                        <SelectItem value="Pending">Pending Approval</SelectItem>
-                        <SelectItem value="Rejected">Rejected</SelectItem>
+                        <SelectItem value="for_sale">For Sale</SelectItem>
+                        <SelectItem value="sold">Sold</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
 
                 <div className="space-y-7">
-                  <div>
-                    <Label htmlFor="location" className="text-base font-medium">
-                      City / Port Location
-                    </Label>
-                    <Input
-                      id="location"
-                      placeholder="London, Singapore, Rotterdam"
-                      className="mt-2 h-12"
-                      value={formData.location}
-                      onChange={(e) => handleInputChange("location", e.target.value)}
-                    />
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="font-medium text-gray-800 mb-2">Current Information</h4>
+                    <div className="text-sm text-gray-600 space-y-1">
+                      <p>Country: {formData.location_country || "Not set"}</p>
+                      <p>Port: {formData.location_port || "Not set"}</p>
+                      <p>Type: {formData.ship_type || "Not set"}</p>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Step 2: Company & Contact */}
-          {currentStep === 2 && (
-            <div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-10">Company & Contact Details</h3>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                <div className="space-y-7">
-                  <div>
-                    <Label htmlFor="company" className="text-base font-medium">
-                      Company Name
-                    </Label>
-                    <Input
-                      id="company"
-                      placeholder="Maritime Brokers Ltd"
-                      className="mt-2 h-12"
-                      value={formData.company}
-                      onChange={(e) => handleInputChange("company", e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="email" className="text-base font-medium">
-                      Email Address
-                    </Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="john@maritimebrokers.com"
-                      className="mt-2 h-12"
-                      value={formData.email}
-                      onChange={(e) => handleInputChange("email", e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-7">
-                  <div>
-                    <Label htmlFor="phone" className="text-base font-medium">
-                      Phone Number
-                    </Label>
-                    <Input
-                      id="phone"
-                      placeholder="+44 20 1234 5678"
-                      className="mt-2 h-12"
-                      value={formData.phone}
-                      onChange={(e) => handleInputChange("phone", e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Step 3: Additional Details */}
+          {/* Step 3: Additional Info */}
           {currentStep === 3 && (
             <div>
               <h3 className="text-2xl font-bold text-gray-800 mb-10">Additional Information</h3>
 
               <div className="max-w-4xl mx-auto space-y-8">
                 <div>
-                  <Label htmlFor="notes" className="text-base font-medium">
-                    Notes / Specializations
+                  <Label htmlFor="description" className="text-base font-medium">
+                    Ship Description
                   </Label>
                   <Textarea
-                    id="notes"
-                    placeholder="e.g., Specializes in tanker chartering, S&P of dry bulk vessels, newbuilding supervision..."
+                    id="description"
+                    placeholder="Detailed description of the ship, specifications, condition, etc."
                     rows={10}
                     className="mt-4 resize-none"
-                    value={formData.notes}
-                    onChange={(e) => handleInputChange("notes", e.target.value)}
+                    value={formData.description}
+                    onChange={(e) => handleInputChange("description", e.target.value)}
                   />
                 </div>
 
                 {/* Summary Preview */}
                 <div className="mt-10 p-6 bg-gray-50 rounded-2xl">
-                  <h4 className="text-lg font-semibold text-gray-800 mb-4">Updated Broker Summary</h4>
+                  <h4 className="text-lg font-semibold text-gray-800 mb-4">Updated Ship Summary</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div>
                       <p className="text-gray-600">Name:</p>
                       <p className="font-medium">{formData.name}</p>
                     </div>
                     <div>
-                      <p className="text-gray-600">Company:</p>
-                      <p className="font-medium">{formData.company || "Not set"}</p>
+                      <p className="text-gray-600">Type:</p>
+                      <p className="font-medium">{formData.ship_type || "Not set"}</p>
                     </div>
                     <div>
                       <p className="text-gray-600">Country:</p>
-                      <p className="font-medium">{formData.country}</p>
+                      <p className="font-medium">{formData.location_country}</p>
                     </div>
                     <div>
-                      <p className="text-gray-600">Location:</p>
-                      <p className="font-medium">{formData.location || formData.country}</p>
+                      <p className="text-gray-600">Port:</p>
+                      <p className="font-medium">{formData.location_port || "Not set"}</p>
                     </div>
                     <div>
                       <p className="text-gray-600">Status:</p>
-                      <p className="font-medium">{formData.status}</p>
+                      <p className="font-medium">{formData.status === "for_sale" ? "For Sale" : "Sold"}</p>
                     </div>
                     <div>
-                      <p className="text-gray-600">Email:</p>
-                      <p className="font-medium">{formData.email || "Not set"}</p>
+                      <p className="text-gray-600">Description:</p>
+                      <p className="font-medium">{formData.description ? "Set" : "Not set"}</p>
                     </div>
                   </div>
                 </div>

@@ -26,7 +26,7 @@ export function DataTable<T extends { id: string | number }>({
   columns, 
   onEdit, 
   onDelete,
-  editRoute = "/admin/projects/edit" 
+  editRoute = "/brokers/edit" 
 }: DataTableProps<T>) {
   const { theme } = useTheme()
   const router = useRouter()

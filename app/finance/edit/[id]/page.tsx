@@ -14,22 +14,24 @@ import {
 } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Footer from "@/components/ui/footer-admin";
-import { useProjects, type Project } from "@/hooks/use-projects";
+import { useFinanceProjects, type FinanceProject } from "@/hooks/use-finance-projects";
+import { useCountries } from "@/hooks/use-countries";
 
 export default function EditProjectPage() {
   const router = useRouter();
   const params = useParams();
   const projectId = params.id ? parseInt(params.id as string) : null;
   
-  const { projects, editProject } = useProjects();
+  const { projects, updateProject } = useFinanceProjects();
+  const { countries, isLoading: countriesLoading } = useCountries();
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const [projectData, setProjectData] = useState<Partial<Project>>({
+  const [projectData, setProjectData] = useState<Partial<FinanceProject>>({
     title: "",
     summary: "",
     country: null,
-    status: "Draft",
-    cover_image: null,
+    status: "D",
+    cover_image: undefined,
   });
 
   const steps = [
@@ -69,17 +71,8 @@ export default function EditProjectPage() {
     }));
   };
 
-  const handleCountryChange = (countryCode: string) => {
-    const countryMap: Record<string, { id: number; code: string; name: string }> = {
-      "GB": { id: 44, code: "GB", name: "United Kingdom" },
-      "AU": { id: 23, code: "AU", name: "Australia" },
-      "US": { id: 1, code: "US", name: "United States" },
-      "DE": { id: 49, code: "DE", name: "Germany" },
-      "SG": { id: 65, code: "SG", name: "Singapore" },
-      "NL": { id: 31, code: "NL", name: "Netherlands" },
-    };
-
-    const country = countryMap[countryCode] || null;
+  const handleCountryChange = (countryId: string) => {
+    const country = countries.find(c => c.id === parseInt(countryId)) || null;
     handleInputChange("country", country);
   };
 
@@ -91,11 +84,24 @@ export default function EditProjectPage() {
 
     setIsLoading(true);
     try {
-      await editProject(projectId, projectData);
-      // بعد از ویرایش موفقیت آمیز، می‌توانید کاربر را به صفحه لیست پروژه‌ها هدایت کنید
-      // router.push("/admin/projects");
+      const payload = {
+        title: projectData.title,
+        summary: projectData.summary,
+        status: projectData.status,
+        country: projectData.country?.id,
+      };
+
+      const result = await updateProject(projectId, payload);
+
+      if (result.success) {
+        alert("Finance project updated successfully!");
+        router.push("/finance");
+      } else {
+        alert(result.message || "Failed to update finance project");
+      }
     } catch (error) {
-      console.error("Error updating project:", error);
+      console.error("Error updating finance project:", error);
+      alert("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -175,19 +181,19 @@ export default function EditProjectPage() {
                   <div>
                     <Label htmlFor="country" className="text-base font-medium">Country</Label>
                     <Select 
-                      value={projectData.country?.code || ""}
+                      value={projectData.country?.id.toString() || ""}
                       onValueChange={handleCountryChange}
+                      disabled={countriesLoading}
                     >
                       <SelectTrigger id="country" className="mt-2 h-12">
-                        <SelectValue placeholder="Select country" />
+                        <SelectValue placeholder={countriesLoading ? "Loading countries..." : "Select country"} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="GB">United Kingdom</SelectItem>
-                        <SelectItem value="AU">Australia</SelectItem>
-                        <SelectItem value="US">United States</SelectItem>
-                        <SelectItem value="DE">Germany</SelectItem>
-                        <SelectItem value="SG">Singapore</SelectItem>
-                        <SelectItem value="NL">Netherlands</SelectItem>
+                        {countries.map((country) => (
+                          <SelectItem key={country.id} value={country.id.toString()}>
+                            {country.name} ({country.code})
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -202,9 +208,9 @@ export default function EditProjectPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Published">Published</SelectItem>
-                        <SelectItem value="Draft">Draft</SelectItem>
-                        <SelectItem value="Pending">Pending</SelectItem>
+                        <SelectItem value="P">Published</SelectItem>
+                        <SelectItem value="D">Draft</SelectItem>
+                        <SelectItem value="R">Rejected</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

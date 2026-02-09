@@ -15,11 +15,13 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { ChevronLeft, ChevronRight, Save, Loader2 } from "lucide-react";
 import Footer from "@/components/ui/footer-admin";
-import { useProjects, type Country, type Project } from "@/hooks/use-projects";
+import { useFinanceProjects, type Country, type FinanceProject } from "@/hooks/use-finance-projects";
+import { useCountries } from "@/hooks/use-countries";
 
 export default function AddProjectPage() {
   const router = useRouter();
-  const { createProject } = useProjects();
+  const { createProject } = useFinanceProjects();
+  const { countries, isLoading: countriesLoading } = useCountries();
   
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -29,9 +31,9 @@ export default function AddProjectPage() {
     title: "",
     summary: "",
     country: null as Country | null,
-    status: "Draft" as "Published" | "Draft" | "Pending" | string,
+    status: "D" as "P" | "D" | "R",
     cover_image: null as string | null,
-    description: "", // فیلد جدید برای توضیحات کامل
+    description_rich: "", // فیلد جدید برای توضیحات کامل
     capacity: "",
     engineType: "",
     builtYear: "",
@@ -62,17 +64,8 @@ export default function AddProjectPage() {
     }));
   };
 
-  const handleCountryChange = (countryCode: string) => {
-    const countryMap: Record<string, Country> = {
-      "GB": { id: 44, code: "GB", name: "United Kingdom" },
-      "AU": { id: 23, code: "AU", name: "Australia" },
-      "US": { id: 1, code: "US", name: "United States" },
-      "DE": { id: 49, code: "DE", name: "Germany" },
-      "SG": { id: 65, code: "SG", name: "Singapore" },
-      "NL": { id: 31, code: "NL", name: "Netherlands" },
-    };
-
-    const country = countryMap[countryCode] || null;
+  const handleCountryChange = (countryId: string) => {
+    const country = countries.find(c => c.id === parseInt(countryId)) || null;
     handleInputChange("country", country);
     
     // اگر لوکیشن خالی است، نام کشور را به عنوان لوکیشن پیش‌فرض قرار بده
@@ -133,15 +126,11 @@ const handleSubmit = async () => {
   
   try {
     // ✅ فقط فیلدهای مورد قبول API را از formData استخراج کن
-    // اینها دقیقاً همان فیلدهای تعریف شده در هوک useProjects هستند
-    const projectData: Omit<Project, 'id' | 'created_by' | 'created_at'> = {
+    const projectData = {
       title: formData.title,
       summary: formData.summary,
-      country: formData.country,
-      status: formData.status,
-      cover_image: formData.cover_image,
-      // ❌ فیلدهای زیر را حذف کنید چون API نمی‌پذیرد:
-      // description, capacity, engineType, builtYear, flag, projectType, location, budget
+      description_rich: formData.description_rich,
+      country: formData.country?.id || 104, // استفاده از id کشور
     };
 
     // استفاده از تابع createProject از هوک
@@ -150,12 +139,12 @@ const handleSubmit = async () => {
     if (result.success) {
       alert(result.message);
       // هدایت به صفحه لیست پروژه‌ها
-      router.push("/projects");
+      router.push("/finance");
     } else {
       alert(result.message);
     }
   } catch (error: any) {
-    console.error("Error creating project:", error);
+    console.error("Error creating finance project:", error);
     alert("An unexpected error occurred. Please try again.");
   } finally {
     setIsLoading(false);
@@ -170,10 +159,10 @@ const handleSubmit = async () => {
       <div className="w-full bg-[#1A365D] shadow-lg">
         <div className="max-w-[1226px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-[77px]">
           <h2 className="text-xl sm:text-2xl md:text-[44px] font-semibold text-white mb-2">
-            Add New Maritime Project
+            Add New Finance Project
           </h2>
           <p className="text-sm sm:text-xl md:text-[28px] text-white opacity-90">
-            Create a new project for the B2B maritime marketplace
+            Create a new finance project for the B2B maritime marketplace
           </p>
         </div>
       </div>
@@ -256,22 +245,19 @@ const handleSubmit = async () => {
                   <div>
                     <Label htmlFor="country" className="text-base font-medium">Country *</Label>
                     <Select 
-                      value={formData.country?.code || ""}
+                      value={formData.country?.id.toString() || ""}
                       onValueChange={handleCountryChange}
+                      disabled={countriesLoading}
                     >
                       <SelectTrigger id="country" className="mt-2 h-12">
-                        <SelectValue placeholder="Select country" />
+                        <SelectValue placeholder={countriesLoading ? "Loading countries..." : "Select country"} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="GB">United Kingdom</SelectItem>
-                        <SelectItem value="AU">Australia</SelectItem>
-                        <SelectItem value="US">United States</SelectItem>
-                        <SelectItem value="DE">Germany</SelectItem>
-                        <SelectItem value="SG">Singapore</SelectItem>
-                        <SelectItem value="NL">Netherlands</SelectItem>
-                        <SelectItem value="JP">Japan</SelectItem>
-                        <SelectItem value="KR">South Korea</SelectItem>
-                        <SelectItem value="CN">China</SelectItem>
+                        {countries.map((country) => (
+                          <SelectItem key={country.id} value={country.id.toString()}>
+                            {country.name} ({country.code})
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -286,9 +272,9 @@ const handleSubmit = async () => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Published">Published</SelectItem>
-                        <SelectItem value="Draft">Draft</SelectItem>
-                        <SelectItem value="Pending">Pending</SelectItem>
+                        <SelectItem value="P">Published</SelectItem>
+                        <SelectItem value="D">Draft</SelectItem>
+                        <SelectItem value="R">Rejected</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -380,8 +366,8 @@ const handleSubmit = async () => {
                       placeholder="Describe the project in detail. Include requirements, specifications, timeline, and any special considerations."
                       rows={12}
                       className="w-full resize-none outline-none text-gray-700 placeholder-gray-400 text-base border-0"
-                      value={formData.description}
-                      onChange={(e) => handleInputChange("description", e.target.value)}
+                      value={formData.description_rich}
+                      onChange={(e) => handleInputChange("description_rich", e.target.value)}
                     />
                   </div>
                 </div>

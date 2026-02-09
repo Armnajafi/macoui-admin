@@ -4,6 +4,22 @@ import { useState, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Plus, Edit2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import DashboardLayout from "@/components/layout/dashboard-layout";
 import { MobileSearchBar } from "@/components/common/mobile-search-bar";
 import { StatsCard } from "@/components/common/stats-card";
@@ -16,10 +32,18 @@ import { useUsers } from "@/hooks/use-users";
 import Link from "next/link"
 
 const tabs = ["All Users", "Active Users", "Pending Users", "Inactive Users"];
-const filters = ["Status", "Role", "Date Range"];
+const filterOptions = ["Status", "Role", "Date Range"];
 
 export default function UserManagementPage() {
   const [activeTab, setActiveTab] = useState("All Users");
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [filters, setFilters] = useState({
+    status: "",
+    role: "",
+    dateFrom: "",
+    dateTo: "",
+  });
   const { theme } = useTheme();
   const {
     users,
@@ -30,19 +54,52 @@ export default function UserManagementPage() {
     deleteUser,
   } = useUsers();
 
-  // فیلتر کاربران بر اساس تب فعال
+  // فیلتر کاربران بر اساس تب فعال و فیلترهای انتخاب شده
   const filteredUsers = useMemo(() => {
+    let filtered = users;
+
+    // فیلترینگ بر اساس تب
     switch (activeTab) {
       case "Active Users":
-        return users.filter((u) => u.status === "Verified");
+        filtered = filtered.filter((u) => u.status === "Verified");
+        break;
       case "Pending Users":
-        return users.filter((u) => u.status.includes("Pending"));
+        filtered = filtered.filter((u) => u.status.includes("Pending"));
+        break;
       case "Inactive Users":
-        return users.filter((u) => ["Rejected", "Inactive"].some(s => u.status.includes(s)));
+        filtered = filtered.filter((u) => ["Rejected", "Inactive"].some(s => u.status.includes(s)));
+        break;
       default:
-        return users;
+        break;
     }
-  }, [users, activeTab]);
+
+    // فیلترینگ بر اساس فیلترهای انتخاب شده
+    if (filters.status) {
+      filtered = filtered.filter((u) => u.status === filters.status);
+    }
+
+    if (filters.role) {
+      filtered = filtered.filter((u) => u.role === filters.role);
+    }
+
+    if (filters.dateFrom) {
+      filtered = filtered.filter((u) => {
+        const userDate = new Date(u.date);
+        const fromDate = new Date(filters.dateFrom);
+        return userDate >= fromDate;
+      });
+    }
+
+    if (filters.dateTo) {
+      filtered = filtered.filter((u) => {
+        const userDate = new Date(u.date);
+        const toDate = new Date(filters.dateTo);
+        return userDate <= toDate;
+      });
+    }
+
+    return filtered;
+  }, [users, activeTab, filters]);
 
   const cardBg = theme === "dark" ? "bg-transparent lg:bg-[#0F2A48]" : "bg-transparent lg:bg-white";
 
@@ -135,6 +192,20 @@ export default function UserManagementPage() {
     }
   };
 
+  const handleFilterClick = (filter: string) => {
+    setActiveFilter(filter);
+    setFilterDialogOpen(true);
+  };
+
+  const handleFilterApply = () => {
+    setFilterDialogOpen(false);
+    setActiveFilter(null);
+  };
+
+  const handleFilterClear = (filterType: string) => {
+    setFilters(prev => ({ ...prev, [filterType]: "" }));
+  };
+
   return (
     <DashboardLayout title="Users Management" wave={true}>
       <MobileSearchBar />
@@ -200,7 +271,49 @@ export default function UserManagementPage() {
             </div>
 
             <TabNavigation tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
-            <FilterButtons filters={filters} />
+            <FilterButtons filters={filterOptions} onFilterClick={handleFilterClick} />
+
+            {/* Active Filters Display */}
+            {(filters.status || filters.role || filters.dateFrom || filters.dateTo) && (
+              <div className="flex flex-wrap gap-2 mb-4">
+                {filters.status && (
+                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                    Status: {filters.status}
+                    <button
+                      onClick={() => handleFilterClear("status")}
+                      className="ml-1 text-blue-600 hover:text-blue-800"
+                    >
+                      ×
+                    </button>
+                  </span>
+                )}
+                {filters.role && (
+                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                    Role: {filters.role}
+                    <button
+                      onClick={() => handleFilterClear("role")}
+                      className="ml-1 text-green-600 hover:text-green-800"
+                    >
+                      ×
+                    </button>
+                  </span>
+                )}
+                {(filters.dateFrom || filters.dateTo) && (
+                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">
+                    Date: {filters.dateFrom || "..."} to {filters.dateTo || "..."}
+                    <button
+                      onClick={() => {
+                        handleFilterClear("dateFrom");
+                        handleFilterClear("dateTo");
+                      }}
+                      className="ml-1 text-purple-600 hover:text-purple-800"
+                    >
+                      ×
+                    </button>
+                  </span>
+                )}
+              </div>
+            )}
 
             {/* Desktop Table */}
             <div className="hidden md:block">
@@ -222,6 +335,109 @@ export default function UserManagementPage() {
           </div>
         </Card>
       </div>
+
+      {/* Filter Dialog */}
+      <Dialog open={filterDialogOpen} onOpenChange={setFilterDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              Filter by {activeFilter}
+              {(filters.status || filters.role || filters.dateFrom || filters.dateTo) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="ml-2"
+                  onClick={() => {
+                    if (activeFilter === "Status") handleFilterClear("status");
+                    if (activeFilter === "Role") handleFilterClear("role");
+                    if (activeFilter === "Date Range") {
+                      handleFilterClear("dateFrom");
+                      handleFilterClear("dateTo");
+                    }
+                  }}
+                >
+                  Clear
+                </Button>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {activeFilter === "Status" && (
+              <div className="space-y-2">
+                <Label htmlFor="status-select">Select Status</Label>
+                <Select
+                  value={filters.status}
+                  onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Verified">Verified</SelectItem>
+                    <SelectItem value="Pending Profile Completion">Pending Profile Completion</SelectItem>
+                    <SelectItem value="Pending Approval Request">Pending Approval Request</SelectItem>
+                    <SelectItem value="Rejected">Rejected</SelectItem>
+                    <SelectItem value="Inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {activeFilter === "Role" && (
+              <div className="space-y-2">
+                <Label htmlFor="role-select">Select Role</Label>
+                <Select
+                  value={filters.role}
+                  onValueChange={(value) => setFilters(prev => ({ ...prev, role: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Admin">Admin</SelectItem>
+                    <SelectItem value="Registered User">Registered User</SelectItem>
+                    <SelectItem value="Verified User">Verified User</SelectItem>
+                    <SelectItem value="Viewer Only">Viewer Only</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {activeFilter === "Date Range" && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="date-from">From Date</Label>
+                  <Input
+                    id="date-from"
+                    type="date"
+                    value={filters.dateFrom}
+                    onChange={(e) => setFilters(prev => ({ ...prev, dateFrom: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="date-to">To Date</Label>
+                  <Input
+                    id="date-to"
+                    type="date"
+                    value={filters.dateTo}
+                    onChange={(e) => setFilters(prev => ({ ...prev, dateTo: e.target.value }))}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => setFilterDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleFilterApply}>
+              Apply Filter
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
