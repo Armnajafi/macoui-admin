@@ -130,7 +130,7 @@ const handleSubmit = async () => {
       title: formData.title,
       summary: formData.summary,
       description_rich: formData.description_rich,
-      country: formData.country?.id || 104, // استفاده از id کشور
+      country: formData.country || {}, // استفاده از id کشور
     };
 
     // استفاده از تابع createProject از هوک

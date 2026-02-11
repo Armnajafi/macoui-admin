@@ -110,7 +110,7 @@ export function useBrokers() {
     admin_note?: string
   ) => {
     try {
-      await api.patch(`${API_URL}${id}/`, { status, admin_note })
+      await api.put(`${API_URL}${id}/`, { status, admin_note })
       mutate()
     } catch (err) {
       alert("تغییر وضعیت با خطا مواجه شد")
