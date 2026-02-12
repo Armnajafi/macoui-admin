@@ -9,7 +9,6 @@ import {
   Home,
   FileText,
   Users,
-  Briefcase,
   Settings,
   Bell,
   Menu,
@@ -17,7 +16,10 @@ import {
   Search,
   FolderOpen,
   Newspaper,
+  ChartCandlestick,
   Activity,
+  TicketCheck,
+  BadgeDollarSign,
 } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -31,8 +33,9 @@ interface DashboardLayoutProps {
 
 const menuItems = [
   { icon: Home, label: "Dashboard", href: "/" },
-  { icon: FolderOpen, label: "Finance", href: "/finance" },
-  { icon: Briefcase, label: "Brokers", href: "/brokers" },
+  { icon: BadgeDollarSign, label: "Finance", href: "/finance" },
+  { icon: TicketCheck, label: "Brokers", href: "/brokers" },
+  { icon: ChartCandlestick, label: "Trading", href: "/trading" },
   { icon: Users, label: "Users", href: "/users" },
   { icon: Newspaper, label: "Articles", href: "/articles" },
   { icon: FileText, label: "Documents", href: "/documents" },
