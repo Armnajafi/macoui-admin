@@ -33,7 +33,7 @@ export interface CreateArticlePayload {
   summary: string
   body: string
   category: ArticleCategory
-  cover_image: string | null
+  cover_image: File | null
   lang: string
   project: number | null
   is_published: boolean
@@ -56,8 +56,23 @@ export function useArticles(page = 1, pageSize = 10) {
 
   const { data, error, isLoading, mutate } = useSWR<ArticlesResponse>(endpoint, swrFetcher)
 
+  const toArticleFormData = (payload: CreateArticlePayload | UpdateArticlePayload) => {
+    const formData = new FormData()
+
+    if (payload.title !== undefined) formData.append("title", payload.title)
+    if (payload.summary !== undefined) formData.append("summary", payload.summary)
+    if (payload.body !== undefined) formData.append("body", payload.body)
+    if (payload.category !== undefined) formData.append("category", payload.category)
+    if (payload.lang !== undefined) formData.append("lang", payload.lang)
+    if (payload.project !== undefined && payload.project !== null) formData.append("project", String(payload.project))
+    if (payload.is_published !== undefined) formData.append("is_published", String(payload.is_published))
+    if (payload.cover_image) formData.append("cover_image", payload.cover_image)
+
+    return formData
+  }
+
   const createArticle = async (payload: CreateArticlePayload) => {
-    const response = await api.post<Article>(API_URL, payload)
+    const response = await api.post<Article>(API_URL, toArticleFormData(payload))
     if (response.error) return { success: false, message: response.error.message }
     await mutate()
     return { success: true, data: response.data, message: "مقاله با موفقیت ایجاد شد." }
@@ -71,7 +86,7 @@ export function useArticles(page = 1, pageSize = 10) {
   }
 
   const updateArticle = async (id: number, payload: UpdateArticlePayload) => {
-    const response = await api.patch<Article>(`${API_URL}${id}/`, payload)
+    const response = await api.patch<Article>(`${API_URL}${id}/`, toArticleFormData(payload))
     if (response.error) return { success: false, message: response.error.message, data: null }
     await mutate()
     return { success: true, data: response.data, message: "مقاله با موفقیت بروزرسانی شد." }

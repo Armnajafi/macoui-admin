@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, type ChangeEvent } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,13 +21,13 @@ export default function AddArticlePage() {
     summary: "",
     body: "",
     category: "finance" as ArticleCategory,
-    cover_image: "",
+    cover_image: null as File | null,
     lang: "en",
     project: "",
     is_published: false,
   })
 
-  const onChange = (field: string, value: string | boolean) => {
+  const onChange = (field: string, value: string | boolean | File | null) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
@@ -44,7 +44,7 @@ export default function AddArticlePage() {
       summary: formData.summary,
       body: formData.body,
       category: formData.category,
-      cover_image: formData.cover_image || null,
+      cover_image: formData.cover_image,
       lang: formData.lang,
       project: formData.project ? Number(formData.project) : null,
       is_published: formData.is_published,
@@ -107,8 +107,8 @@ export default function AddArticlePage() {
           </div>
 
           <div>
-            <Label htmlFor="cover_image">Cover Image URL (optional)</Label>
-            <Input id="cover_image" value={formData.cover_image} onChange={(e) => onChange("cover_image", e.target.value)} />
+            <Label htmlFor="cover_image">Cover Image File (optional)</Label>
+            <Input id="cover_image" type="file" accept="image/*" onChange={(e: ChangeEvent<HTMLInputElement>) => onChange("cover_image", e.target.files?.[0] || null)} />
           </div>
         </div>
 
