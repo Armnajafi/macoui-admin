@@ -79,7 +79,7 @@ const columns: TableColumn<Broker>[] = [
         : b.status === "sold"
         ? "bg-blue-100 text-blue-800"
         : "bg-gray-100 text-gray-800"
-      return <span className={`px-2 py-1 text-xs font-medium rounded-full ${style}`}>{b.status_display}</span>
+      return <span className={`px-2 py-1 text-xs font-medium rounded-full ${style}`}>{b.status}</span>
     }
   },
   {

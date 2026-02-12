@@ -130,7 +130,8 @@ export default function UserManagementPage() {
       key: "role",
       header: "Role",
       render: (u: any) => (
-        <span className="px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-800 rounded-full">
+        <span className="px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-800 
+        text-black rounded-full">
           {u.role}
         </span>
       ),
@@ -139,10 +140,11 @@ export default function UserManagementPage() {
       key: "status",
       header: "Status",
       render: (u: any) => {
-        let badgeClass = "px-3 py-1 rounded-full text-xs font-medium";
+        let badgeClass = "w-100 px-3 py-1 rounded-full text-xs font-medium";
         if (u.status === "Verified") {
           badgeClass += " bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
         } else if (u.status.includes("Pending")) {
+          u.status = "Pending"
           badgeClass += " bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
         } else {
           badgeClass += " bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
@@ -375,8 +377,8 @@ export default function UserManagementPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Verified">Verified</SelectItem>
-                    <SelectItem value="Pending Profile Completion">Pending Profile Completion</SelectItem>
-                    <SelectItem value="Pending Approval Request">Pending Approval Request</SelectItem>
+                    <SelectItem value="Pending Profile Completion">Pending to Complete</SelectItem>
+                    <SelectItem value="Pending Approval Request">Pending to Approve</SelectItem>
                     <SelectItem value="Rejected">Rejected</SelectItem>
                     <SelectItem value="Inactive">Inactive</SelectItem>
                   </SelectContent>
