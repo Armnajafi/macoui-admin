@@ -1,11 +1,13 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { MoreVertical, Edit, Trash2 } from "lucide-react"
 import { useTheme } from "@/contexts/theme-context"
 import { StatusBadge } from "./status-badge"
+
+const ITEMS_PER_PAGE = 8
 
 export interface TableColumn<T> {
   key: keyof T | string
@@ -31,6 +33,22 @@ export function DataTable<T extends { id: string | number }>({
   const { theme } = useTheme()
   const router = useRouter()
   const [openMenuId, setOpenMenuId] = useState<string | number | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+
+  const totalPages = Math.max(1, Math.ceil(data.length / ITEMS_PER_PAGE))
+
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+    return data.slice(startIndex, startIndex + ITEMS_PER_PAGE)
+  }, [currentPage, data])
+
+  useEffect(() => {
+    setCurrentPage((prevPage) => Math.min(prevPage, totalPages))
+  }, [totalPages])
+
+  useEffect(() => {
+    setOpenMenuId(null)
+  }, [currentPage])
 
   const getValue = (item: T, key: string): unknown => {
     return (item as Record<string, unknown>)[key]
@@ -78,7 +96,7 @@ export function DataTable<T extends { id: string | number }>({
           </thead>
 
           <tbody className={`divide-y ${theme === "dark" ? "divide-slate-800" : "divide-gray-100"}`}>
-            {data.map((item) => (
+            {paginatedData.map((item) => (
               <tr
                 key={item.id}
                 className={`group transition-colors relative ${theme === "dark" ? "hover:bg-[#151E32]" : "hover:bg-gray-50"}`}
@@ -153,6 +171,42 @@ export function DataTable<T extends { id: string | number }>({
           </tbody>
         </table>
       </div>
+
+      {data.length > ITEMS_PER_PAGE && (
+        <div className={`flex items-center justify-between px-4 py-3 border-t ${theme === "dark" ? "border-slate-800" : "border-gray-200"}`}>
+          <p className={`text-sm ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>
+            Page {currentPage} of {totalPages}
+          </p>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setCurrentPage((prevPage) => Math.max(prevPage - 1, 1))}
+              disabled={currentPage === 1}
+              className={`px-3 py-1.5 text-sm rounded-md border transition disabled:opacity-50 disabled:cursor-not-allowed ${
+                theme === "dark"
+                  ? "border-slate-700 text-slate-200 hover:bg-slate-800"
+                  : "border-gray-200 text-slate-700 hover:bg-gray-100"
+              }`}
+            >
+              قبلی
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setCurrentPage((prevPage) => Math.min(prevPage + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className={`px-3 py-1.5 text-sm rounded-md border transition disabled:opacity-50 disabled:cursor-not-allowed ${
+                theme === "dark"
+                  ? "border-slate-700 text-slate-200 hover:bg-slate-800"
+                  : "border-gray-200 text-slate-700 hover:bg-gray-100"
+              }`}
+            >
+              بعدی
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
