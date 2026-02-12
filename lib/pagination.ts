@@ -4,9 +4,9 @@ export function toApiEndpoint(url: string): string {
   if (url.startsWith("http")) {
     const parsed = new URL(url)
     const apiPathIndex = parsed.pathname.indexOf("/api/")
-    const path = apiPathIndex >= 0 ? parsed.pathname.slice(apiPathIndex + 4) : parsed.pathname
+    const path = apiPathIndex >= 0 ? parsed.pathname.slice(apiPathIndex) : parsed.pathname
     return `${path}${parsed.search}`
   }
 
-  return url.startsWith("/api") ? url.slice(4) : url
+  return url
 }

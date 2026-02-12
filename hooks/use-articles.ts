@@ -50,12 +50,13 @@ const toQueryString = (page?: number, pageSize?: number) => {
   if (page) params.set("page", String(page))
   if (pageSize) params.set("page_size", String(pageSize))
   const query = params.toString()
+console.log(query)
   return query ? `?${query}` : ""
 }
 
 export function useArticles(page = 1, pageSize = 10) {
   const [endpoint, setEndpoint] = useState(`${API_URL}${toQueryString(page, pageSize)}`)
-
+  
   const { data, error, isLoading, mutate } = useSWR<ArticlesResponse>(endpoint, swrFetcher)
 
   const toArticleFormData = (payload: CreateArticlePayload | UpdateArticlePayload) => {
