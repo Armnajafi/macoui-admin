@@ -13,7 +13,7 @@ const formatDate = (date: string) =>
 
 export default function TradingCustomOrdersPage() {
   const { theme } = useTheme()
-  const { customOrders, stats, count, isLoading, isError } = useTradingCustomOrders()
+  const { customOrders, stats, count, nextPage, previousPage, goToNextPage, goToPreviousPage, isLoading, isError } = useTradingCustomOrders()
 
   const columns = [
     { key: "id" as const, header: "ID", render: (item: TradingCustomOrder) => `#${item.id}` },
@@ -41,7 +41,19 @@ export default function TradingCustomOrdersPage() {
           </div>
 
           <div className="hidden md:block overflow-x-auto">
-            <DataTable data={customOrders} columns={columns} editRoute="/trading/custom-orders/edit" />
+            <DataTable
+              data={customOrders}
+              columns={columns}
+              editRoute="/trading/custom-orders/edit"
+              pagination={{
+                totalCount: count,
+                nextPage,
+                previousPage,
+                onNextPage: goToNextPage,
+                onPreviousPage: goToPreviousPage,
+                isLoading,
+              }}
+            />
           </div>
 
           <div className="md:hidden">

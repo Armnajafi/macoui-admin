@@ -1,7 +1,9 @@
 "use client"
 
 import useSWR, { mutate } from "swr"
+import { useState } from "react"
 import { api, swrFetcher } from "@/lib/api"
+import { toApiEndpoint } from "@/lib/pagination"
 
 export type CustomOrderStatus = "new" | "in_review" | "matched" | "closed"
 
@@ -51,7 +53,8 @@ export interface TradingCustomOrderUpdatePayload {
 }
 
 export function useTradingCustomOrders() {
-  const { data, error, isLoading } = useSWR<TradingCustomOrdersResponse>(API_URL, swrFetcher, {
+  const [endpoint, setEndpoint] = useState(API_URL)
+  const { data, error, isLoading } = useSWR<TradingCustomOrdersResponse>(endpoint, swrFetcher, {
     revalidateOnFocus: false,
     revalidateOnReconnect: true,
   })
@@ -86,6 +89,10 @@ export function useTradingCustomOrders() {
   return {
     customOrders,
     count: data?.count || 0,
+    nextPage: data?.next ?? null,
+    previousPage: data?.previous ?? null,
+    goToNextPage: () => data?.next && setEndpoint(toApiEndpoint(data.next)),
+    goToPreviousPage: () => data?.previous && setEndpoint(toApiEndpoint(data.previous)),
     stats: statusStats,
     isLoading,
     isError: !!error,

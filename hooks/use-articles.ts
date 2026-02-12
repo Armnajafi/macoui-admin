@@ -1,7 +1,9 @@
 "use client"
 
 import useSWR from "swr"
+import { useState } from "react"
 import { api, swrFetcher } from "@/lib/api"
+import { toApiEndpoint } from "@/lib/pagination"
 
 export type ArticleCategory = "finance" | "trading" | "consultancy" | "general"
 
@@ -52,7 +54,7 @@ const toQueryString = (page?: number, pageSize?: number) => {
 }
 
 export function useArticles(page = 1, pageSize = 10) {
-  const endpoint = `${API_URL}${toQueryString(page, pageSize)}`
+  const [endpoint, setEndpoint] = useState(`${API_URL}${toQueryString(page, pageSize)}`)
 
   const { data, error, isLoading, mutate } = useSWR<ArticlesResponse>(endpoint, swrFetcher)
 
@@ -106,6 +108,8 @@ export function useArticles(page = 1, pageSize = 10) {
     count: data?.count ?? 0,
     nextPage: data?.next ?? null,
     previousPage: data?.previous ?? null,
+    goToNextPage: () => data?.next && setEndpoint(toApiEndpoint(data.next)),
+    goToPreviousPage: () => data?.previous && setEndpoint(toApiEndpoint(data.previous)),
     isLoading,
     isError: !!error,
     createArticle,

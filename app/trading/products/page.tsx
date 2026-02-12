@@ -17,7 +17,7 @@ const formatDate = (date: string) =>
 
 export default function TradingProductsPage() {
   const { theme } = useTheme()
-  const { products, stats, count, isLoading, isError, deleteProduct } = useTradingProducts()
+  const { products, stats, count, nextPage, previousPage, goToNextPage, goToPreviousPage, isLoading, isError, deleteProduct } = useTradingProducts()
 
   const columns = [
     { key: "id" as const, header: "ID", render: (p: TradingProduct) => `#${p.id}` },
@@ -73,7 +73,20 @@ export default function TradingProductsPage() {
           </div>
 
           <div className="hidden md:block overflow-x-auto">
-            <DataTable data={products} columns={columns} editRoute="/trading/products/edit" onDelete={(p) => deleteProduct(p.id)} />
+            <DataTable
+              data={products}
+              columns={columns}
+              editRoute="/trading/products/edit"
+              onDelete={(p) => deleteProduct(p.id)}
+              pagination={{
+                totalCount: count,
+                nextPage,
+                previousPage,
+                onNextPage: goToNextPage,
+                onPreviousPage: goToPreviousPage,
+                isLoading,
+              }}
+            />
           </div>
         </div>
       </Card>

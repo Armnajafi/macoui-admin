@@ -21,7 +21,7 @@ const filters = ["Activity", "Type", "Date Range"];
 export default function DocumentManagementPage() {
   const [activeTab, setActiveTab] = useState("All Documents");
   const { theme } = useTheme();
-  const { documents, stats, count, isLoading, isError } = useDocuments();
+  const { documents, stats, count, nextPage, previousPage, goToNextPage, goToPreviousPage, isLoading, isError } = useDocuments();
 
   // Filter documents based on selected tab
   const filteredDocuments = useMemo(() => {
@@ -193,7 +193,19 @@ export default function DocumentManagementPage() {
 
             {/* Desktop Table */}
             <div className="hidden md:block">
-              <DataTable data={filteredDocuments} columns={columns as any} editRoute="/documents/edit/"/>
+              <DataTable
+                data={filteredDocuments}
+                columns={columns as any}
+                editRoute="/documents/edit/"
+                pagination={{
+                  totalCount: count,
+                  nextPage,
+                  previousPage,
+                  onNextPage: goToNextPage,
+                  onPreviousPage: goToPreviousPage,
+                  isLoading,
+                }}
+              />
             </div>
 
             {/* Mobile List */}

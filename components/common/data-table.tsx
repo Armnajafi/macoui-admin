@@ -20,7 +20,15 @@ interface DataTableProps<T> {
   columns: TableColumn<T>[]
   onEdit?: (item: T) => void
   onDelete?: (item: T) => void
-  editRoute?: string // مسیر صفحه ویرایش، مثلاً "/admin/projects/edit"
+  editRoute?: string
+  pagination?: {
+    totalCount: number
+    nextPage: string | null
+    previousPage: string | null
+    onNextPage: () => void
+    onPreviousPage: () => void
+    isLoading?: boolean
+  }
 }
 
 export function DataTable<T extends { id: string | number }>({ 
@@ -28,23 +36,27 @@ export function DataTable<T extends { id: string | number }>({
   columns, 
   onEdit, 
   onDelete,
-  editRoute = "/brokers/edit" 
+  editRoute = "/brokers/edit",
+  pagination,
 }: DataTableProps<T>) {
   const { theme } = useTheme()
   const router = useRouter()
   const [openMenuId, setOpenMenuId] = useState<string | number | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
 
+  const hasServerPagination = Boolean(pagination)
   const totalPages = Math.max(1, Math.ceil(data.length / ITEMS_PER_PAGE))
 
   const paginatedData = useMemo(() => {
+    if (hasServerPagination) return data
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
     return data.slice(startIndex, startIndex + ITEMS_PER_PAGE)
-  }, [currentPage, data])
+  }, [currentPage, data, hasServerPagination])
 
   useEffect(() => {
+    if (hasServerPagination) return
     setCurrentPage((prevPage) => Math.min(prevPage, totalPages))
-  }, [totalPages])
+  }, [totalPages, hasServerPagination])
 
   useEffect(() => {
     setOpenMenuId(null)
@@ -172,37 +184,51 @@ export function DataTable<T extends { id: string | number }>({
         </table>
       </div>
 
-      {data.length > ITEMS_PER_PAGE && (
+      {(hasServerPagination || data.length > ITEMS_PER_PAGE) && (
         <div className={`flex items-center justify-between px-4 py-3 border-t ${theme === "dark" ? "border-slate-800" : "border-gray-200"}`}>
           <p className={`text-sm ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>
-            Page {currentPage} of {totalPages}
+            {hasServerPagination
+              ? `Showing ${data.length} of ${pagination?.totalCount ?? data.length} records`
+              : `Page ${currentPage} of ${totalPages}`}
           </p>
 
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => setCurrentPage((prevPage) => Math.max(prevPage - 1, 1))}
-              disabled={currentPage === 1}
+              onClick={() => {
+                if (hasServerPagination) {
+                  pagination?.onPreviousPage()
+                  return
+                }
+                setCurrentPage((prevPage) => Math.max(prevPage - 1, 1))
+              }}
+              disabled={hasServerPagination ? !pagination?.previousPage || pagination?.isLoading : currentPage === 1}
               className={`px-3 py-1.5 text-sm rounded-md border transition disabled:opacity-50 disabled:cursor-not-allowed ${
                 theme === "dark"
                   ? "border-slate-700 text-slate-200 hover:bg-slate-800"
                   : "border-gray-200 text-slate-700 hover:bg-gray-100"
               }`}
             >
-              قبلی
+              Previous
             </button>
 
             <button
               type="button"
-              onClick={() => setCurrentPage((prevPage) => Math.min(prevPage + 1, totalPages))}
-              disabled={currentPage === totalPages}
+              onClick={() => {
+                if (hasServerPagination) {
+                  pagination?.onNextPage()
+                  return
+                }
+                setCurrentPage((prevPage) => Math.min(prevPage + 1, totalPages))
+              }}
+              disabled={hasServerPagination ? !pagination?.nextPage || pagination?.isLoading : currentPage === totalPages}
               className={`px-3 py-1.5 text-sm rounded-md border transition disabled:opacity-50 disabled:cursor-not-allowed ${
                 theme === "dark"
                   ? "border-slate-700 text-slate-200 hover:bg-slate-800"
                   : "border-gray-200 text-slate-700 hover:bg-gray-100"
               }`}
             >
-              بعدی
+              Next
             </button>
           </div>
         </div>
