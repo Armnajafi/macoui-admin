@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { CkEditor } from "@/components/ui/ckeditor"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader2 } from "lucide-react"
 import { useArticleDetail, useArticles, type ArticleCategory } from "@/hooks/use-articles"
@@ -95,7 +96,7 @@ export default function EditArticlePage() {
 
         <div>
           <Label htmlFor="body">Body *</Label>
-          <Textarea id="body" rows={8} value={formData.body} onChange={(e) => onChange("body", e.target.value)} />
+          <CkEditor id="body" value={formData.body} onChange={(value) => onChange("body", value)} />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
