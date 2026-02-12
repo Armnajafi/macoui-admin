@@ -1,7 +1,9 @@
 "use client";
 
 import useSWR, { mutate } from "swr";
+import { useState } from "react";
 import { swrFetcher, api } from "@/lib/api";
+import { toApiEndpoint } from "@/lib/pagination";
 
 // Frontend display model
 export interface Activity {
@@ -58,11 +60,12 @@ const mockStats = {
 const API_URL = "/api/management/core/activity-config/";
 
 export function useActivities() {
+  const [endpoint, setEndpoint] = useState(API_URL);
   const {
     data,
     error,
     isLoading,
-  } = useSWR<ActivitiesApiResponse>(API_URL, swrFetcher, {
+  } = useSWR<ActivitiesApiResponse>(endpoint, swrFetcher, {
     fallbackData: {
       count: mockStats.total,
       next: null,
@@ -166,7 +169,7 @@ export function useActivities() {
   };
 
   // Processed data
-  const rawResults = Array.isArray(data) ? data : [];
+  const rawResults = data?.results ?? [];
   
   const activities: Activity[] = rawResults.map(mapToActivity);
 
@@ -183,6 +186,8 @@ export function useActivities() {
     count: data?.count ?? mockStats.total,
     nextPage: data?.next ?? null,
     previousPage: data?.previous ?? null,
+    goToNextPage: () => data?.next && setEndpoint(toApiEndpoint(data.next)),
+    goToPreviousPage: () => data?.previous && setEndpoint(toApiEndpoint(data.previous)),
     isLoading,
     isError: !!error,
     error,

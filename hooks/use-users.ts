@@ -2,7 +2,9 @@
 "use client";
 
 import useSWR, { mutate } from "swr";
+import { useState } from "react";
 import { swrFetcher, api } from "@/lib/api";
+import { toApiEndpoint } from "@/lib/pagination";
 
 export interface User {
   id: string;
@@ -54,7 +56,8 @@ const statusMap: Record<string, string> = {
 };
 
 export function useUsers() {
-  const { data, error, isLoading } = useSWR<UsersApiResponse>(API_URL, swrFetcher, {
+  const [endpoint, setEndpoint] = useState(API_URL);
+  const { data, error, isLoading } = useSWR<UsersApiResponse>(endpoint, swrFetcher, {
     revalidateOnFocus: false,
     revalidateOnReconnect: true,
     // fallbackData حذف شد — فقط وقتی API در دسترس نیست mock نشون بده
@@ -154,6 +157,8 @@ export function useUsers() {
     count: data?.count || 0,
     nextPage: data?.next ?? null,
     previousPage: data?.previous ?? null,
+    goToNextPage: () => data?.next && setEndpoint(toApiEndpoint(data.next)),
+    goToPreviousPage: () => data?.previous && setEndpoint(toApiEndpoint(data.previous)),
     isLoading,
     isError: !!error,
     error,

@@ -100,7 +100,7 @@ export default function BrokerManagementPage() {
     seller: "",
   })
   const { theme } = useTheme()
-  const { brokers, stats } = useBrokers()
+  const { brokers, stats, total, nextPage, previousPage, goToNextPage, goToPreviousPage, isLoading } = useBrokers()
 
   // فیلترینگ بر اساس تب فعال و فیلترهای انتخاب شده
   const filteredBrokers = brokers.filter((b) => {
@@ -257,7 +257,18 @@ export default function BrokerManagementPage() {
 
             {/* Desktop Table */}
             <div className="hidden md:block">
-              <DataTable data={filteredBrokers} columns={columns} />
+              <DataTable
+                data={filteredBrokers}
+                columns={columns}
+                pagination={{
+                  totalCount: total,
+                  nextPage,
+                  previousPage,
+                  onNextPage: goToNextPage,
+                  onPreviousPage: goToPreviousPage,
+                  isLoading,
+                }}
+              />
             </div>
 
             {/* Mobile List View */}

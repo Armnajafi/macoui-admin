@@ -29,7 +29,7 @@ const formatDate = (dateString?: string | null) => {
 export default function ArticleManagementPage() {
   const [activeTab, setActiveTab] = useState("all")
   const { theme } = useTheme()
-  const { articles, stats, deleteArticle, isLoading } = useArticles()
+  const { articles, stats, count, nextPage, previousPage, goToNextPage, goToPreviousPage, deleteArticle, isLoading } = useArticles()
 
   const filteredArticles = useMemo(() => {
     if (activeTab === "published") return articles.filter((a) => a.is_published)
@@ -122,7 +122,20 @@ export default function ArticleManagementPage() {
             {isLoading ? <p className="py-8 text-sm text-gray-500">Loading articles...</p> : null}
 
             <div className="hidden md:block overflow-x-auto">
-              <DataTable data={filteredArticles} columns={columns} editRoute="/articles/edit" onDelete={handleDelete} />
+              <DataTable
+                data={filteredArticles}
+                columns={columns}
+                editRoute="/articles/edit"
+                onDelete={handleDelete}
+                pagination={{
+                  totalCount: count,
+                  nextPage,
+                  previousPage,
+                  onNextPage: goToNextPage,
+                  onPreviousPage: goToPreviousPage,
+                  isLoading,
+                }}
+              />
             </div>
 
             <div className="md:hidden">

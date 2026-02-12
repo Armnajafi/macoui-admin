@@ -2,7 +2,9 @@
 "use client";
 
 import useSWR, { mutate } from "swr";
+import { useState } from "react";
 import { swrFetcher, api } from "@/lib/api";
+import { toApiEndpoint } from "@/lib/pagination";
 
 export interface Country {
   id: number;
@@ -32,7 +34,8 @@ interface FinanceProjectsApiResponse {
 const API_URL = "/api/management/finance/projects/";
 
 export function useFinanceProjects() {
-  const { data, error, isLoading } = useSWR<FinanceProjectsApiResponse>(API_URL, swrFetcher, {
+  const [endpoint, setEndpoint] = useState(API_URL);
+  const { data, error, isLoading } = useSWR<FinanceProjectsApiResponse>(endpoint, swrFetcher, {
     revalidateOnFocus: false,
     revalidateOnReconnect: true,
   });
@@ -110,6 +113,8 @@ export function useFinanceProjects() {
     count: data?.count || 0,
     nextPage: data?.next ?? null,
     previousPage: data?.previous ?? null,
+    goToNextPage: () => data?.next && setEndpoint(toApiEndpoint(data.next)),
+    goToPreviousPage: () => data?.previous && setEndpoint(toApiEndpoint(data.previous)),
     isLoading,
     isError: !!error,
     error,

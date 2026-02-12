@@ -2,7 +2,9 @@
 "use client"
 
 import useSWR from "swr"
+import { useState } from "react"
 import { swrFetcher, api } from "@/lib/api"
+import { toApiEndpoint } from "@/lib/pagination"
 
 export interface Broker {
   id: number
@@ -71,7 +73,8 @@ const mockResponse: BrokersResponse = {
 }
 
 export function useBrokers() {
-  const { data, error, isLoading, mutate } = useSWR<BrokersResponse>(API_URL, swrFetcher, {
+  const [endpoint, setEndpoint] = useState(API_URL)
+  const { data, error, isLoading, mutate } = useSWR<BrokersResponse>(endpoint, swrFetcher, {
     revalidateOnFocus: false,
     revalidateOnReconnect: true,
   })
@@ -122,6 +125,10 @@ export function useBrokers() {
     brokers,
     stats,
     total,
+    nextPage: data?.next ?? null,
+    previousPage: data?.previous ?? null,
+    goToNextPage: () => data?.next && setEndpoint(toApiEndpoint(data.next)),
+    goToPreviousPage: () => data?.previous && setEndpoint(toApiEndpoint(data.previous)),
     isLoading,
     isError: !!error,
     deleteBroker,

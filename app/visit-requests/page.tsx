@@ -115,7 +115,7 @@ export default function VisitRequestsManagementPage() {
     user: "",
   })
   const { theme } = useTheme()
-  const { visitRequests, stats, updateVisitRequest } = useVisitRequests()
+  const { visitRequests, stats, count, nextPage, previousPage, goToNextPage, goToPreviousPage, updateVisitRequest, isLoading } = useVisitRequests()
 
   // فیلترینگ بر اساس تب فعال و فیلترهای انتخاب شده
   const filteredRequests = visitRequests.filter((v) => {
@@ -278,6 +278,14 @@ export default function VisitRequestsManagementPage() {
                 data={filteredRequests}
                 columns={columns}
                 editRoute="/visit-requests/edit"
+                pagination={{
+                  totalCount: count,
+                  nextPage,
+                  previousPage,
+                  onNextPage: goToNextPage,
+                  onPreviousPage: goToPreviousPage,
+                  isLoading,
+                }}
               />
             </div>
 

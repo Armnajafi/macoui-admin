@@ -48,7 +48,10 @@ export default function UserManagementPage() {
   const {
     users,
     stats,
-    count,
+    nextPage,
+    previousPage,
+    goToNextPage,
+    goToPreviousPage,
     isLoading,
     isError,
     deleteUser,
@@ -323,7 +326,14 @@ export default function UserManagementPage() {
                 data={filteredUsers}
                 columns={columns as any}
                 editRoute="/users/edit"
-                // Actions ستون (Edit + Delete)
+                pagination={{
+                  totalCount: stats.total,
+                  nextPage,
+                  previousPage,
+                  onNextPage: goToNextPage,
+                  onPreviousPage: goToPreviousPage,
+                  isLoading,
+                }}
               />
             </div>
 

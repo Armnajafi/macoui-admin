@@ -23,7 +23,7 @@ const formatDate = (dateString: string) =>
 
 export default function ProjectManagementPage() {
   const { theme } = useTheme()
-  const { projects, stats, count, isLoading, isError, deleteProject } = useFinanceProjects()
+  const { projects, stats, count, nextPage, previousPage, goToNextPage, goToPreviousPage, isLoading, isError, deleteProject } = useFinanceProjects()
 
   const handleDelete = (project: FinanceProject) => {
     if (confirm(`Are you sure you want to delete "${project.title}"?`)) {
@@ -186,6 +186,14 @@ export default function ProjectManagementPage() {
                 columns={columns} 
                 editRoute="/finance/edit"
                 onDelete={handleDelete}
+                pagination={{
+                  totalCount: count,
+                  nextPage,
+                  previousPage,
+                  onNextPage: goToNextPage,
+                  onPreviousPage: goToPreviousPage,
+                  isLoading,
+                }}
               />
             </div>
 

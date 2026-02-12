@@ -1,7 +1,9 @@
 "use client";
 
 import useSWR, { mutate } from "swr";
+import { useState } from "react";
 import { swrFetcher, api } from "@/lib/api";
+import { toApiEndpoint } from "@/lib/pagination";
 
 // Frontend Document model
 export interface Document {
@@ -81,11 +83,12 @@ const activityDisplayMap: Record<string, string> = {
 };
 
 export function useDocuments() {
+  const [endpoint, setEndpoint] = useState(API_URL);
   const {
     data,
     error,
     isLoading,
-  } = useSWR<DocumentsApiResponse>(API_URL, swrFetcher, {
+  } = useSWR<DocumentsApiResponse>(endpoint, swrFetcher, {
     fallbackData: {
       count: mockStats.total,
       next: null,
@@ -238,6 +241,8 @@ export function useDocuments() {
     count: data?.count ?? mockStats.total,
     nextPage: data?.next ?? null,
     previousPage: data?.previous ?? null,
+    goToNextPage: () => data?.next && setEndpoint(toApiEndpoint(data.next)),
+    goToPreviousPage: () => data?.previous && setEndpoint(toApiEndpoint(data.previous)),
     isLoading,
     isError: !!error,
     error,

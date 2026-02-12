@@ -22,11 +22,7 @@ const formatDate = (dateString: string) =>
 
 export default function ActivityConfigurationPage() {
   const { theme } = useTheme();
-  const { activities, stats, count, isLoading, isError } = useActivities();
-  // const { activities, stats, count, isLoading, isError } = useActivities();
-
-  // فقط برای دیباگ — اینو موقتاً بذار ببینیم چی میاد
-  console.log("useActivities data:", { activities, stats, count, isLoading, isError });
+  const { activities, stats, count, nextPage, previousPage, goToNextPage, goToPreviousPage, isLoading, isError } = useActivities();
   const cardBg =
     theme === "dark" ? "bg-transparent lg:bg-[#0F2A48]" : "bg-transparent lg:bg-white";
 
@@ -167,8 +163,14 @@ export default function ActivityConfigurationPage() {
                 data={activities}
                 columns={columns}
                 editRoute="/activities"
-                
-                // No edit/delete — فقط نمایش
+                pagination={{
+                  totalCount: count,
+                  nextPage,
+                  previousPage,
+                  onNextPage: goToNextPage,
+                  onPreviousPage: goToPreviousPage,
+                  isLoading,
+                }}
               />
             </div>
 

@@ -1,7 +1,9 @@
 "use client"
 
 import useSWR, { mutate } from "swr"
+import { useState } from "react"
 import { api, swrFetcher } from "@/lib/api"
+import { toApiEndpoint } from "@/lib/pagination"
 
 export type QuotationStatus = "new" | "in_review" | "quoted" | "closed"
 
@@ -44,7 +46,8 @@ export interface TradingQuotationUpdatePayload {
 }
 
 export function useTradingQuotations() {
-  const { data, error, isLoading } = useSWR<TradingQuotationsResponse>(API_URL, swrFetcher, {
+  const [endpoint, setEndpoint] = useState(API_URL)
+  const { data, error, isLoading } = useSWR<TradingQuotationsResponse>(endpoint, swrFetcher, {
     revalidateOnFocus: false,
     revalidateOnReconnect: true,
   })
@@ -79,6 +82,10 @@ export function useTradingQuotations() {
   return {
     quotations,
     count: data?.count || 0,
+    nextPage: data?.next ?? null,
+    previousPage: data?.previous ?? null,
+    goToNextPage: () => data?.next && setEndpoint(toApiEndpoint(data.next)),
+    goToPreviousPage: () => data?.previous && setEndpoint(toApiEndpoint(data.previous)),
     stats: statusStats,
     isLoading,
     isError: !!error,
