@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -23,7 +22,7 @@ const formatDate = (dateString: string) =>
 
 export default function ProjectManagementPage() {
   const { theme } = useTheme()
-  const { projects, stats, count, nextPage, previousPage, goToNextPage, goToPreviousPage, isLoading, isError, deleteProject } = useFinanceProjects()
+  const { projects, stats, count, nextPage, previousPage, goToNextPage, goToPreviousPage, isLoading, isError, deleteProject, normalizeStatus } = useFinanceProjects()
 
   const handleDelete = (project: FinanceProject) => {
     if (confirm(`Are you sure you want to delete "${project.title}"?`)) {
@@ -66,10 +65,11 @@ export default function ProjectManagementPage() {
           D: "Draft",
           R: "Rejected",
         }
-        const style = map[p.status] ?? "bg-gray-100 text-gray-800"
+        const normalized = normalizeStatus(p.status)
+        const style = map[normalized] ?? "bg-gray-100 text-gray-800"
         return (
           <span className={`px-3 py-1 rounded-full text-xs font-medium ${style}`}>
-            {statusText[p.status] || p.status}
+            {statusText[normalized] || p.status}
           </span>
         )
       },
@@ -89,9 +89,9 @@ export default function ProjectManagementPage() {
     id: p.id,
     title: p.title,
     subtitle: p.country?.name ?? "No country",
-    meta: [formatDate(p.created_at), p.status === "P" ? "Published" : p.status === "D" ? "Draft" : "Rejected"],
+    meta: [formatDate(p.created_at), normalizeStatus(p.status) === "P" ? "Published" : normalizeStatus(p.status) === "D" ? "Draft" : "Rejected"],
     createdBy: p.created_by.split("@")[0],
-    status: p.status === "P" ? "Published" : p.status === "D" ? "Draft" : "Rejected",
+    status: normalizeStatus(p.status) === "P" ? "Published" : normalizeStatus(p.status) === "D" ? "Draft" : "Rejected",
     coverImage: p.cover_image
       ? `http://admin.tailwindrose.com${p.cover_image}`
       : null,
