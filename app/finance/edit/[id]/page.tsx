@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import Footer from "@/components/ui/footer-admin";
 import { useCountries } from "@/hooks/use-countries";
 import { useFinanceProjects } from "@/hooks/use-finance-projects";
+import { FINANCE_FIELD_LABELS, FINANCE_SELECT_OPTIONS, toOptionLabel } from "@/app/finance/form-options";
 
 export default function EditProjectPage() {
   const router = useRouter();
@@ -32,14 +33,14 @@ export default function EditProjectPage() {
     project_financed_type: "",
     amortization_profile: "",
     required_service: "",
-    ltv_ratio_percent: "",
+    ltv_ratio_bucket: "",
     transaction_amount_musd: "",
     financing_rate_type: "",
     derivative_hedging_type: "",
     transaction_stage: "",
     collateral_type: "",
-    tenor_years: "",
-    status: "D" as "P" | "D" | "R",
+    tenor_bucket: "",
+    status: "D" as "P" | "D" | "C",
   });
 
   useEffect(() => {
@@ -55,13 +56,13 @@ export default function EditProjectPage() {
       project_financed_type: project.project_financed_type || "",
       amortization_profile: project.amortization_profile || "",
       required_service: project.required_service || "",
-      ltv_ratio_percent: project.ltv_ratio_percent || "",
+      ltv_ratio_bucket: project.ltv_ratio_bucket || "",
       transaction_amount_musd: project.transaction_amount_musd || "",
       financing_rate_type: project.financing_rate_type || "",
       derivative_hedging_type: project.derivative_hedging_type || "",
       transaction_stage: project.transaction_stage || "",
       collateral_type: project.collateral_type || "",
-      tenor_years: project.tenor_years ? String(project.tenor_years) : "",
+      tenor_bucket: project.tenor_bucket || "",
       status: normalizeStatus(project.status),
     });
   }, [project, normalizeStatus]);
@@ -85,13 +86,13 @@ export default function EditProjectPage() {
       project_financed_type: formData.project_financed_type || undefined,
       amortization_profile: formData.amortization_profile || undefined,
       required_service: formData.required_service || undefined,
-      ltv_ratio_percent: formData.ltv_ratio_percent || undefined,
+      ltv_ratio_bucket: formData.ltv_ratio_bucket || undefined,
       transaction_amount_musd: formData.transaction_amount_musd || undefined,
       financing_rate_type: formData.financing_rate_type || undefined,
       derivative_hedging_type: formData.derivative_hedging_type || undefined,
       transaction_stage: formData.transaction_stage || undefined,
       collateral_type: formData.collateral_type || undefined,
-      tenor_years: formData.tenor_years ? Number(formData.tenor_years) : null,
+      tenor_bucket: formData.tenor_bucket || undefined,
       status: formData.status,
     });
     setIsSubmitting(false);
@@ -138,43 +139,44 @@ export default function EditProjectPage() {
 
           <div>
             <Label>Status</Label>
-            <Select value={formData.status} onValueChange={(v: "P" | "D" | "R") => handleChange("status", v)}>
+            <Select value={formData.status} onValueChange={(v: "P" | "D" | "C") => handleChange("status", v)}>
               <SelectTrigger className="mt-2 h-12"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="D">Draft</SelectItem>
                 <SelectItem value="P">Published</SelectItem>
-                <SelectItem value="R">Rejected</SelectItem>
+                <SelectItem value="C">Closed</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {[
-            "ship_type",
-            "financing_product_type",
-            "project_financed_type",
-            "amortization_profile",
-            "required_service",
-            "ltv_ratio_percent",
-            "transaction_amount_musd",
-            "financing_rate_type",
-            "derivative_hedging_type",
-            "transaction_stage",
-            "collateral_type",
-          ].map((key) => (
-            <div key={key}>
-              <Label>{key.replaceAll("_", " ")}</Label>
-              <Input className="mt-2 h-12" value={(formData as any)[key]} onChange={(e) => handleChange(key, e.target.value)} />
-            </div>
-          ))}
+          {(Object.keys(FINANCE_SELECT_OPTIONS) as (keyof typeof FINANCE_SELECT_OPTIONS)[])
+            .filter((key) => key !== "status")
+            .map((key) => (
+              <div key={key}>
+                <Label>{FINANCE_FIELD_LABELS[key]}</Label>
+                <Select value={(formData as any)[key]} onValueChange={(value) => handleChange(key, value)}>
+                  <SelectTrigger className="mt-2 h-12">
+                    <SelectValue placeholder={`Select ${FINANCE_FIELD_LABELS[key]}`} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {FINANCE_SELECT_OPTIONS[key].map((value) => (
+                      <SelectItem key={value} value={value}>
+                        {toOptionLabel(value)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ))}
+
+          <div>
+            <Label>Transaction Amount (MUSD)</Label>
+            <Input className="mt-2 h-12" value={formData.transaction_amount_musd} onChange={(e) => handleChange("transaction_amount_musd", e.target.value)} />
+          </div>
 
           <div>
             <Label>Vessel Age Years</Label>
             <Input type="number" className="mt-2 h-12" value={formData.vessel_age_years} onChange={(e) => handleChange("vessel_age_years", e.target.value)} />
-          </div>
-
-          <div>
-            <Label>Tenor Years</Label>
-            <Input type="number" className="mt-2 h-12" value={formData.tenor_years} onChange={(e) => handleChange("tenor_years", e.target.value)} />
           </div>
         </div>
 

@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Footer from "@/components/ui/footer-admin";
 import { useCountries } from "@/hooks/use-countries";
 import { useFinanceProjects } from "@/hooks/use-finance-projects";
+import { FINANCE_FIELD_LABELS, FINANCE_SELECT_OPTIONS, toOptionLabel } from "@/app/finance/form-options";
 
 export default function AddProjectPage() {
   const router = useRouter();
@@ -28,14 +29,14 @@ export default function AddProjectPage() {
     project_financed_type: "",
     amortization_profile: "",
     required_service: "",
-    ltv_ratio_percent: "",
+    ltv_ratio_bucket: "",
     transaction_amount_musd: "",
     financing_rate_type: "",
     derivative_hedging_type: "",
     transaction_stage: "",
     collateral_type: "",
-    tenor_years: "",
-    status: "D" as "P" | "D" | "R",
+    tenor_bucket: "",
+    status: "D" as "P" | "D" | "C",
   });
 
   const handleChange = (field: string, value: string) => {
@@ -60,13 +61,13 @@ export default function AddProjectPage() {
       project_financed_type: formData.project_financed_type || undefined,
       amortization_profile: formData.amortization_profile || undefined,
       required_service: formData.required_service || undefined,
-      ltv_ratio_percent: formData.ltv_ratio_percent || undefined,
+      ltv_ratio_bucket: formData.ltv_ratio_bucket || undefined,
       transaction_amount_musd: formData.transaction_amount_musd || undefined,
       financing_rate_type: formData.financing_rate_type || undefined,
       derivative_hedging_type: formData.derivative_hedging_type || undefined,
       transaction_stage: formData.transaction_stage || undefined,
       collateral_type: formData.collateral_type || undefined,
-      tenor_years: formData.tenor_years ? Number(formData.tenor_years) : null,
+      tenor_bucket: formData.tenor_bucket || undefined,
       status: formData.status,
     });
     setIsSubmitting(false);
@@ -89,21 +90,7 @@ export default function AddProjectPage() {
 
       <div className="max-w-[1226px] mx-auto p-6">
         <div className="bg-white rounded-3xl shadow-lg border border-gray-200 p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-          {Object.entries({
-            title: "Title *",
-            summary: "Summary *",
-            ship_type: "Ship Type",
-            financing_product_type: "Financing Product Type",
-            project_financed_type: "Project Financed Type",
-            amortization_profile: "Amortization Profile",
-            required_service: "Required Service",
-            ltv_ratio_percent: "LTV Ratio (%)",
-            transaction_amount_musd: "Transaction Amount (MUSD)",
-            financing_rate_type: "Financing Rate Type",
-            derivative_hedging_type: "Derivative Hedging Type",
-            transaction_stage: "Transaction Stage",
-            collateral_type: "Collateral Type",
-          }).map(([key, label]) => (
+          {Object.entries({ title: "Title *", summary: "Summary *", transaction_amount_musd: "Transaction Amount (MUSD)" }).map(([key, label]) => (
             <div key={key} className={key === "summary" ? "md:col-span-2" : ""}>
               <Label className="text-base font-medium">{label}</Label>
               {key === "summary" ? (
@@ -113,6 +100,26 @@ export default function AddProjectPage() {
               )}
             </div>
           ))}
+
+          {(Object.keys(FINANCE_SELECT_OPTIONS) as (keyof typeof FINANCE_SELECT_OPTIONS)[])
+            .filter((key) => key !== "status")
+            .map((key) => (
+              <div key={key}>
+                <Label className="text-base font-medium">{FINANCE_FIELD_LABELS[key]}</Label>
+                <Select value={(formData as any)[key]} onValueChange={(value) => handleChange(key, value)}>
+                  <SelectTrigger className="mt-2 h-12">
+                    <SelectValue placeholder={`Select ${FINANCE_FIELD_LABELS[key]}`} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {FINANCE_SELECT_OPTIONS[key].map((value) => (
+                      <SelectItem key={value} value={value}>
+                        {toOptionLabel(value)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ))}
 
           <div>
             <Label className="text-base font-medium">Description Rich</Label>
@@ -137,18 +144,13 @@ export default function AddProjectPage() {
           </div>
 
           <div>
-            <Label className="text-base font-medium">Tenor (Years)</Label>
-            <Input className="mt-2 h-12" type="number" value={formData.tenor_years} onChange={(e) => handleChange("tenor_years", e.target.value)} />
-          </div>
-
-          <div>
             <Label className="text-base font-medium">Status</Label>
-            <Select value={formData.status} onValueChange={(v: "P" | "D" | "R") => handleChange("status", v)}>
+            <Select value={formData.status} onValueChange={(v: "P" | "D" | "C") => handleChange("status", v)}>
               <SelectTrigger className="mt-2 h-12"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="D">Draft</SelectItem>
                 <SelectItem value="P">Published</SelectItem>
-                <SelectItem value="R">Rejected</SelectItem>
+                <SelectItem value="C">Closed</SelectItem>
               </SelectContent>
             </Select>
           </div>
