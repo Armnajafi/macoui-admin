@@ -1,4 +1,3 @@
-// hooks/use-finance-projects.ts
 "use client";
 
 import useSWR, { mutate } from "swr";
@@ -12,16 +11,32 @@ export interface Country {
   name: string;
 }
 
+export type FinanceStatus = "P" | "D" | "R" | "Published" | "Draft" | "Rejected";
+
 export interface FinanceProject {
   id: number;
   title: string;
   summary: string;
   description_rich?: string;
   country: Country | null;
-  status: "P" | "D" | "R"; // Published, Draft, Rejected
+  ship_type?: string | null;
+  vessel_age_years?: number | null;
+  financing_product_type?: string | null;
+  project_financed_type?: string | null;
+  amortization_profile?: string | null;
+  required_service?: string | null;
+  ltv_ratio_percent?: string | null;
+  transaction_amount_musd?: string | null;
+  financing_rate_type?: string | null;
+  derivative_hedging_type?: string | null;
+  transaction_stage?: string | null;
+  collateral_type?: string | null;
+  tenor_years?: number | null;
+  status: FinanceStatus;
   created_by: string;
   created_at: string;
-  cover_image?: string;
+  updated_at?: string;
+  cover_image?: string | null;
 }
 
 interface FinanceProjectsApiResponse {
@@ -31,7 +46,42 @@ interface FinanceProjectsApiResponse {
   results: FinanceProject[];
 }
 
+interface FinanceStatsResponse {
+  total_projects: number;
+  pending_projects: number;
+  approved_projects: number;
+  closed_projects: number;
+}
+
+export interface FinanceProjectPayload {
+  title: string;
+  summary: string;
+  description_rich?: string;
+  country: number;
+  ship_type?: string;
+  vessel_age_years?: number | null;
+  financing_product_type?: string;
+  project_financed_type?: string;
+  amortization_profile?: string;
+  required_service?: string;
+  ltv_ratio_percent?: string;
+  transaction_amount_musd?: string;
+  financing_rate_type?: string;
+  derivative_hedging_type?: string;
+  transaction_stage?: string;
+  collateral_type?: string;
+  tenor_years?: number | null;
+  status?: "P" | "D" | "R";
+}
+
 const API_URL = "/api/management/finance/projects/";
+
+const normalizeStatus = (status: FinanceStatus): "P" | "D" | "R" => {
+  if (status === "Published") return "P";
+  if (status === "Draft") return "D";
+  if (status === "Rejected") return "R";
+  return status;
+};
 
 export function useFinanceProjects() {
   const [endpoint, setEndpoint] = useState(API_URL);
@@ -39,67 +89,66 @@ export function useFinanceProjects() {
     revalidateOnFocus: false,
     revalidateOnReconnect: true,
   });
+  const { data: statsData } = useSWR<FinanceStatsResponse>(
+    "/api/management/finance/projects/statistics/",
+    swrFetcher,
+    { revalidateOnFocus: false }
+  );
 
-  // Transform API data to frontend format
   const projects: FinanceProject[] = data?.results || [];
 
   const stats = {
-    total: data?.count || 0,
-    published: projects.filter(p => p.status === "P").length,
-    draft: projects.filter(p => p.status === "D").length,
-    rejected: projects.filter(p => p.status === "R").length,
+    total: statsData?.total_projects ?? data?.count ?? 0,
+    published: statsData?.approved_projects ?? projects.filter((p) => normalizeStatus(p.status) === "P").length,
+    draft: statsData?.pending_projects ?? projects.filter((p) => normalizeStatus(p.status) === "D").length,
+    rejected: projects.filter((p) => normalizeStatus(p.status) === "R").length,
+    closed: statsData?.closed_projects ?? 0,
   };
 
-  // Create Project
-  const createProject = async (payload: {
-    title: string;
-    summary: string;
-    description_rich?: string;
-    country: object;
-  }) => {
+  const createProject = async (payload: FinanceProjectPayload) => {
     try {
-      const response = await api.post("/api/management/finance/projects/create/", payload);
-      await mutate(API_URL);
+      await api.post("/api/management/finance/projects/create/", payload);
+      await Promise.all([
+        mutate(API_URL),
+        mutate("/api/management/finance/projects/statistics/"),
+      ]);
       return { success: true, message: "Project created successfully" };
     } catch (err: any) {
       console.error("Create finance project failed:", err);
-      const msg = err.response?.data?.detail ||
-                  err.response?.data?.title?.[0] ||
-                  err.response?.data?.summary?.[0] ||
-                  "Failed to create finance project";
+      const msg =
+        err.response?.data?.detail ||
+        err.response?.data?.title?.[0] ||
+        err.response?.data?.summary?.[0] ||
+        "Failed to create finance project";
       return { success: false, message: msg };
     }
   };
 
-  // Update Project
-  const updateProject = async (
-    id: number,
-    payload: Partial<{
-      title: string;
-      summary: string;
-      description_rich: string;
-      status: "P" | "D" | "R";
-      country: number;
-    }>
-  ) => {
+  const updateProject = async (id: number, payload: Partial<FinanceProjectPayload>) => {
     try {
       await api.patch(`${API_URL}${id}/`, payload);
-      await mutate(API_URL);
+      await Promise.all([
+        mutate(API_URL),
+        mutate("/api/management/finance/projects/statistics/"),
+      ]);
       return { success: true };
     } catch (err: any) {
       console.error("Update finance project failed:", err);
-      return { success: false, message: "Failed to update finance project" };
+      const msg = err.response?.data?.detail || "Failed to update finance project";
+      return { success: false, message: msg };
     }
   };
 
-  // Delete Project
   const deleteProject = async (id: number) => {
     if (!confirm("Are you sure you want to delete this finance project? This action cannot be undone.")) {
       return;
     }
     try {
       await api.delete(`${API_URL}${id}/`);
-      await mutate(API_URL);
+      await Promise.all([
+        mutate(API_URL),
+        mutate("/api/management/finance/projects/statistics/"),
+      ]);
       return { success: true };
     } catch (err: any) {
       console.error("Delete finance project failed:", err);
@@ -110,6 +159,7 @@ export function useFinanceProjects() {
   return {
     projects,
     stats,
+    normalizeStatus,
     count: data?.count || 0,
     nextPage: data?.next ?? null,
     previousPage: data?.previous ?? null,
@@ -118,12 +168,9 @@ export function useFinanceProjects() {
     isLoading,
     isError: !!error,
     error,
-
-    // CRUD operations
     createProject,
     updateProject,
     deleteProject,
-
     mutate: () => mutate(API_URL),
   };
 }
