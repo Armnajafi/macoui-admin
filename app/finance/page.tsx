@@ -58,12 +58,12 @@ export default function ProjectManagementPage() {
         const map: Record<string, string> = {
           P: "bg-green-100 text-green-800",
           D: "bg-yellow-100 text-yellow-800",
-          R: "bg-red-100 text-red-800",
+          C: "bg-blue-100 text-blue-800",
         }
         const statusText = {
           P: "Published",
           D: "Draft",
-          R: "Rejected",
+          C: "Closed",
         }
         const normalized = normalizeStatus(p.status)
         const style = map[normalized] ?? "bg-gray-100 text-gray-800"
@@ -89,9 +89,9 @@ export default function ProjectManagementPage() {
     id: p.id,
     title: p.title,
     subtitle: p.country?.name ?? "No country",
-    meta: [formatDate(p.created_at), normalizeStatus(p.status) === "P" ? "Published" : normalizeStatus(p.status) === "D" ? "Draft" : "Rejected"],
+    meta: [formatDate(p.created_at), normalizeStatus(p.status) === "P" ? "Published" : normalizeStatus(p.status) === "D" ? "Draft" : "Closed"],
     createdBy: p.created_by.split("@")[0],
-    status: normalizeStatus(p.status) === "P" ? "Published" : normalizeStatus(p.status) === "D" ? "Draft" : "Rejected",
+    status: normalizeStatus(p.status) === "P" ? "Published" : normalizeStatus(p.status) === "D" ? "Draft" : "Closed",
     coverImage: p.cover_image
       ? `http://admin.tailwindrose.com${p.cover_image}`
       : null,

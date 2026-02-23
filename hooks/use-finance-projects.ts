@@ -11,7 +11,7 @@ export interface Country {
   name: string;
 }
 
-export type FinanceStatus = "P" | "D" | "R" | "Published" | "Draft" | "Rejected";
+export type FinanceStatus = "P" | "D" | "C" | "R" | "Published" | "Draft" | "Closed" | "Rejected";
 
 export interface FinanceProject {
   id: number;
@@ -25,13 +25,13 @@ export interface FinanceProject {
   project_financed_type?: string | null;
   amortization_profile?: string | null;
   required_service?: string | null;
-  ltv_ratio_percent?: string | null;
+  ltv_ratio_bucket?: string | null;
   transaction_amount_musd?: string | null;
   financing_rate_type?: string | null;
   derivative_hedging_type?: string | null;
   transaction_stage?: string | null;
   collateral_type?: string | null;
-  tenor_years?: number | null;
+  tenor_bucket?: string | null;
   status: FinanceStatus;
   created_by: string;
   created_at: string;
@@ -64,22 +64,22 @@ export interface FinanceProjectPayload {
   project_financed_type?: string;
   amortization_profile?: string;
   required_service?: string;
-  ltv_ratio_percent?: string;
+  ltv_ratio_bucket?: string;
   transaction_amount_musd?: string;
   financing_rate_type?: string;
   derivative_hedging_type?: string;
   transaction_stage?: string;
   collateral_type?: string;
-  tenor_years?: number | null;
-  status?: "P" | "D" | "R";
+  tenor_bucket?: string | null;
+  status?: "P" | "D" | "C";
 }
 
 const API_URL = "/api/management/finance/projects/";
 
-const normalizeStatus = (status: FinanceStatus): "P" | "D" | "R" => {
+const normalizeStatus = (status: FinanceStatus): "P" | "D" | "C" => {
   if (status === "Published") return "P";
   if (status === "Draft") return "D";
-  if (status === "Rejected") return "R";
+  if (status === "Closed" || status === "Rejected" || status === "R") return "C";
   return status;
 };
 
@@ -101,7 +101,7 @@ export function useFinanceProjects() {
     total: statsData?.total_projects ?? data?.count ?? 0,
     published: statsData?.approved_projects ?? projects.filter((p) => normalizeStatus(p.status) === "P").length,
     draft: statsData?.pending_projects ?? projects.filter((p) => normalizeStatus(p.status) === "D").length,
-    rejected: projects.filter((p) => normalizeStatus(p.status) === "R").length,
+    rejected: 0,
     closed: statsData?.closed_projects ?? 0,
   };
 
